@@ -6,174 +6,295 @@
   <title>Hunter × Hunter: Nen Card Battle</title>
   <style>
     :root {
-      --bg: #0f1419;
-      --panel: #1a2332;
-      --accent: #e8b923;
-      --enhancement: #4ade80;
-      --transmutation: #a78bfa;
-      --emission: #f97316;
+      --bg: #0b0f14;
+      --panel: #141c27;
+      --panel2: #1a2433;
+      --accent: #f0c014;
+      --enhancement: #34d399;
+      --transmutation: #c084fc;
+      --emission: #fb923c;
       --conjuration: #38bdf8;
       --manipulation: #f472b6;
       --specialization: #fbbf24;
       --text: #e2e8f0;
-      --danger: #ef4444;
-      --success: #22c55e;
+      --muted: #94a3b8;
+      --danger: #f87171;
+      --success: #4ade80;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 20% 0%, #1a2a1a44 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, #2a1a3a44 0%, transparent 50%);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
     }
     h1, h2, h3 { font-weight: 700; }
     button {
-      cursor: pointer;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 18px;
-      font-weight: 600;
-      font-size: 14px;
-      transition: transform 0.1s, opacity 0.2s;
+      cursor: pointer; border: none; border-radius: 10px;
+      padding: 11px 20px; font-weight: 600; font-size: 14px;
+      transition: transform 0.12s, box-shadow 0.2s, opacity 0.2s;
     }
-    button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .btn-primary { background: var(--accent); color: #111; }
-    .btn-secondary { background: #334155; color: #fff; }
-    .btn-danger { background: var(--danger); color: #fff; }
-    .btn-success { background: var(--success); color: #fff; }
+    button:hover { transform: translateY(-2px); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn-primary {
+      background: linear-gradient(135deg, #f0c014, #d4a017);
+      color: #111; box-shadow: 0 4px 14px #f0c01444;
+    }
+    .btn-secondary { background: #2d3a4f; color: #fff; }
+    .btn-danger { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
+    .btn-success { background: linear-gradient(135deg, #22c55e, #15803d); color: #fff; }
     .hidden { display: none !important; }
 
-    /* Screens */
     .screen { min-height: 100vh; padding: 20px; max-width: 1400px; margin: 0 auto; }
-    #menu-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center; }
-    #menu-screen h1 { font-size: 2.8rem; background: linear-gradient(90deg, #4ade80, #a78bfa, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    #menu-screen p { color: #94a3b8; max-width: 520px; line-height: 1.5; }
+    #menu-screen {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 20px; text-align: center; min-height: 100vh; padding-top: 12px; padding-bottom: 40px;
+    }
+    .title-art {
+      width: min(340px, 88vw);
+      height: auto;
+      border-radius: 16px;
+      box-shadow:
+        0 0 0 2px #34d39955,
+        0 0 40px #34d39944,
+        0 20px 50px #000a;
+      animation: title-glow 3s ease-in-out infinite alternate;
+    }
+    @keyframes title-glow {
+      from { box-shadow: 0 0 0 2px #34d39944, 0 0 30px #34d39933, 0 16px 40px #000a; }
+      to   { box-shadow: 0 0 0 2px #fbbf2466, 0 0 50px #34d39955, 0 20px 55px #000c; }
+    }
+    #menu-screen h1 {
+      font-size: clamp(1.4rem, 4vw, 1.9rem); line-height: 1.2;
+      background: linear-gradient(90deg, #34d399, #c084fc, #fb923c, #fbbf24);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px #34d39933);
+      margin-top: -4px;
+    }
+    #menu-screen p { color: var(--muted); max-width: 480px; line-height: 1.55; font-size: 0.98rem; }
     .menu-buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .sound-toggle {
+      position: fixed; top: 16px; right: 16px; z-index: 50;
+      background: #1e293b; color: #e2e8f0; border-radius: 999px; padding: 8px 14px; font-size: 13px;
+    }
 
     /* Deck Builder */
-    #deck-builder { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
-    .card-pool, .deck-list { background: var(--panel); border-radius: 12px; padding: 16px; max-height: 80vh; overflow-y: auto; }
-    .card-pool h2, .deck-list h2 { margin-bottom: 12px; font-size: 1.2rem; }
-    .pool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-    .deck-count { color: var(--accent); margin-bottom: 8px; }
+    #deck-builder { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+    .card-pool, .deck-list {
+      background: var(--panel); border-radius: 14px; padding: 16px;
+      max-height: 80vh; overflow-y: auto; border: 1px solid #243044;
+    }
+    .pool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+    .deck-count { color: var(--accent); }
 
-    /* Game Board */
+    /* Game */
     #game-screen { display: flex; flex-direction: column; gap: 12px; }
     .top-bar {
       display: flex; justify-content: space-between; align-items: center;
-      background: var(--panel); padding: 12px 20px; border-radius: 12px; flex-wrap: wrap; gap: 10px;
+      background: var(--panel); padding: 12px 18px; border-radius: 14px;
+      flex-wrap: wrap; gap: 10px; border: 1px solid #243044;
     }
-    .life-box { display: flex; align-items: center; gap: 8px; font-size: 1.3rem; font-weight: 700; }
-    .life-box .heart { color: var(--danger); }
-    .aura-box { display: flex; align-items: center; gap: 6px; }
+    .life-box { display: flex; align-items: center; gap: 8px; font-size: 1.35rem; font-weight: 800; }
+    .life-box .heart { color: var(--danger); filter: drop-shadow(0 0 6px #f8717166); }
+    .aura-box { display: flex; align-items: center; gap: 5px; }
     .aura-pip {
-      width: 18px; height: 18px; border-radius: 50%;
-      background: linear-gradient(135deg, #fbbf24, #f59e0b);
-      box-shadow: 0 0 6px #fbbf24;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fde68a, #f59e0b);
+      box-shadow: 0 0 8px #fbbf2488;
+      transition: transform 0.2s, opacity 0.2s;
     }
-    .aura-pip.empty { background: #334155; box-shadow: none; }
-    .phase-indicator { font-weight: 600; color: var(--accent); letter-spacing: 0.05em; }
+    .aura-pip.empty { background: #1e293b; box-shadow: none; opacity: 0.5; }
+    .phase-indicator {
+      font-weight: 700; color: var(--accent); letter-spacing: 0.04em;
+      padding: 6px 14px; background: #1e293b; border-radius: 8px; font-size: 13px;
+    }
     .log-panel {
-      background: #0c1220; border-radius: 8px; padding: 8px 12px;
-      font-size: 13px; max-height: 80px; overflow-y: auto; color: #94a3b8;
+      background: #0a1018; border-radius: 10px; padding: 8px 14px;
+      font-size: 12.5px; max-height: 72px; overflow-y: auto; color: var(--muted);
+      border: 1px solid #1e293b; font-family: ui-monospace, monospace;
     }
-
-    .battlefield {
-      display: grid; grid-template-rows: auto auto auto;
-      gap: 10px; min-height: 340px;
-    }
+    .log-panel div { padding: 2px 0; border-bottom: 1px solid #1e293b33; }
+    .battlefield { display: flex; flex-direction: column; gap: 10px; min-height: 320px; }
     .zone {
-      background: var(--panel); border-radius: 10px; padding: 10px;
-      min-height: 110px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start;
+      background: var(--panel); border-radius: 12px; padding: 10px 12px;
+      min-height: 120px; border: 1px solid #243044; position: relative;
     }
-    .zone-label { width: 100%; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 4px; }
-    .opponent-zone { border: 1px solid #7f1d1d33; }
-    .player-zone { border: 1px solid #14532d33; }
+    .zone-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+      color: #64748b; margin-bottom: 6px; font-weight: 600;
+    }
+    .opponent-zone { box-shadow: inset 0 0 40px #7f1d1d18; }
+    .player-zone { box-shadow: inset 0 0 40px #14532d18; }
+    .board-row { display: flex; flex-wrap: wrap; gap: 10px; min-height: 80px; }
     .hand-zone {
-      background: #0c1220; border-radius: 10px; padding: 12px;
-      display: flex; flex-wrap: wrap; gap: 10px; min-height: 150px; justify-content: center;
+      background: #0a1018; border-radius: 12px; padding: 12px;
+      display: flex; flex-wrap: wrap; gap: 10px; min-height: 160px;
+      justify-content: center; border: 1px solid #1e293b;
     }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 8px 0; }
 
-    /* Cards */
+    /* ===== CARDS ===== */
     .card {
-      width: 140px; min-height: 190px; border-radius: 10px;
-      background: linear-gradient(160deg, #1e293b, #0f172a);
-      border: 2px solid #334155; padding: 8px; position: relative;
-      cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+      width: 132px; min-height: 188px; border-radius: 12px;
+      background: linear-gradient(165deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #334155; padding: 7px;
+      position: relative; cursor: pointer;
+      transition: transform 0.18s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.2s, border-color 0.2s;
       display: flex; flex-direction: column; font-size: 11px;
-      user-select: none;
+      user-select: none; overflow: hidden;
     }
-    .card:hover { transform: translateY(-6px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); z-index: 5; }
-    .card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
-    .card.tapped { transform: rotate(8deg); opacity: 0.85; }
-    .card.attacking { border-color: var(--danger); box-shadow: 0 0 12px #ef444466; }
-    .card.blocking { border-color: var(--success); }
-    .card.unplayable { opacity: 0.55; filter: grayscale(0.4); }
+    .card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 10px;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.04) 100%);
+      pointer-events: none;
+    }
+    .card:hover { transform: translateY(-8px) scale(1.03); z-index: 8; }
+    .card.selected { border-color: #f0c014; box-shadow: 0 0 0 2px #f0c014, 0 12px 28px #f0c01433; }
+    .card.tapped { transform: rotate(7deg); opacity: 0.82; filter: brightness(0.85); }
+    .card.attacking {
+      border-color: #f87171;
+      box-shadow: 0 0 16px #f8717166, 0 8px 20px #0006;
+      animation: pulse-attack 1s ease-in-out infinite;
+    }
+    .card.blocking { border-color: #4ade80; box-shadow: 0 0 12px #4ade8066; }
+    .card.unplayable { opacity: 0.5; filter: grayscale(0.35); }
+    .card.targetable {
+      border-color: #fbbf24 !important;
+      box-shadow: 0 0 0 2px #fbbf24, 0 0 20px #fbbf2466 !important;
+      animation: target-pulse 0.9s ease-in-out infinite;
+      cursor: crosshair;
+    }
+    .card.damage-flash { animation: dmg-flash 0.45s ease; }
+    @keyframes pulse-attack {
+      0%,100% { transform: translateY(-4px); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes target-pulse {
+      0%,100% { box-shadow: 0 0 0 2px #fbbf24, 0 0 12px #fbbf2444; }
+      50% { box-shadow: 0 0 0 3px #fde68a, 0 0 22px #fbbf2488; }
+    }
+    @keyframes dmg-flash {
+      0% { filter: brightness(2) saturate(2); }
+      100% { filter: none; }
+    }
     .card-cost {
-      position: absolute; top: 6px; right: 6px;
-      background: #fbbf24; color: #111; width: 22px; height: 22px;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 12px;
-    }
-    .card-name { font-weight: 700; font-size: 12px; margin-bottom: 4px; padding-right: 24px; line-height: 1.2; }
-    .card-type { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
-    .nen-badge {
-      display: inline-block; padding: 1px 6px; border-radius: 4px;
-      font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;
-    }
-    .nen-enhancement { background: #166534; color: #bbf7d0; }
-    .nen-transmutation { background: #5b21b6; color: #e9d5ff; }
-    .nen-emission { background: #9a3412; color: #fed7aa; }
-    .nen-conjuration { background: #075985; color: #bae6fd; }
-    .nen-manipulation { background: #9d174d; color: #fbcfe8; }
-    .nen-specialization { background: #854d0e; color: #fef08a; }
-    .card-art {
-      height: 50px; border-radius: 6px; margin-bottom: 6px;
+      position: absolute; top: 5px; right: 5px; z-index: 2;
+      background: radial-gradient(circle at 30% 30%, #fde68a, #d97706);
+      color: #111; width: 24px; height: 24px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 28px; background: #1e293b;
+      font-weight: 900; font-size: 12px;
+      box-shadow: 0 2px 6px #0008, inset 0 1px 0 #fff4;
     }
-    .card-text { flex: 1; color: #cbd5e1; font-size: 10px; line-height: 1.3; overflow: hidden; }
-    .card-stats {
-      margin-top: auto; text-align: right; font-weight: 800; font-size: 14px;
-      background: #0f172a; padding: 2px 6px; border-radius: 4px; align-self: flex-end;
+    .card-name {
+      font-weight: 700; font-size: 11.5px; margin-bottom: 3px;
+      padding-right: 26px; line-height: 1.25; color: #f1f5f9;
     }
-    .card.technique .card-stats { display: none; }
-    .card.technique { border-style: dashed; }
+    .card-type { font-size: 9.5px; color: #94a3b8; margin-bottom: 3px; }
+    .nen-badge {
+      display: inline-block; padding: 2px 7px; border-radius: 5px;
+      font-size: 8.5px; font-weight: 800; text-transform: uppercase;
+      margin-bottom: 5px; letter-spacing: 0.03em;
+    }
+    .nen-enhancement { background: #065f46; color: #a7f3d0; box-shadow: 0 0 8px #34d39933; }
+    .nen-transmutation { background: #5b21b6; color: #e9d5ff; box-shadow: 0 0 8px #c084fc33; }
+    .nen-emission { background: #9a3412; color: #fed7aa; box-shadow: 0 0 8px #fb923c33; }
+    .nen-conjuration { background: #0c4a6e; color: #bae6fd; box-shadow: 0 0 8px #38bdf833; }
+    .nen-manipulation { background: #9d174d; color: #fbcfe8; box-shadow: 0 0 8px #f472b633; }
+    .nen-specialization { background: #78350f; color: #fef08a; box-shadow: 0 0 8px #fbbf2433; }
 
-    /* Controls */
-    .controls {
-      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 10px 0;
+    .card-art {
+      height: 48px; border-radius: 8px; margin-bottom: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; position: relative; overflow: hidden;
     }
+    .card.nen-enhancement .card-art { background: linear-gradient(135deg, #064e3a, #022c22); }
+    .card.nen-transmutation .card-art { background: linear-gradient(135deg, #4c1d95, #2e1065); }
+    .card.nen-emission .card-art { background: linear-gradient(135deg, #7c2d12, #431407); }
+    .card.nen-conjuration .card-art { background: linear-gradient(135deg, #0c4a6e, #082f49); }
+    .card.nen-manipulation .card-art { background: linear-gradient(135deg, #831843, #500724); }
+    .card.nen-specialization .card-art { background: linear-gradient(135deg, #713f12, #451a03); }
+
+    .card-text { flex: 1; color: #cbd5e1; font-size: 9.5px; line-height: 1.35; overflow: hidden; }
+    .card-stats {
+      margin-top: auto; text-align: right; font-weight: 900; font-size: 15px;
+      background: #020617; padding: 3px 8px; border-radius: 6px; align-self: flex-end;
+      border: 1px solid #1e293b; letter-spacing: 0.02em;
+    }
+    .card.technique { border-style: dashed; border-width: 2px; }
+    .card.technique .card-stats { display: none; }
+
+    /* Nen-colored borders */
+    .card.nen-enhancement { border-color: #05966955; }
+    .card.nen-transmutation { border-color: #7c3aed55; }
+    .card.nen-emission { border-color: #ea580c55; }
+    .card.nen-conjuration { border-color: #0284c755; }
+    .card.nen-manipulation { border-color: #db277755; }
+    .card.nen-specialization { border-color: #ca8a0455; }
+
+    /* Targeting banner */
+    #target-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+      background: linear-gradient(90deg, #78350f, #92400e);
+      color: #fef3c7; text-align: center; padding: 10px;
+      font-weight: 700; font-size: 14px;
+      box-shadow: 0 4px 20px #0008;
+      display: none;
+    }
+    #target-banner.visible { display: block; animation: slide-down 0.25s ease; }
+    @keyframes slide-down { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+    #target-banner button { margin-left: 12px; padding: 4px 12px; font-size: 12px; }
+
+    /* Face target (player / AI life) */
+    .face-target {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 8px; cursor: pointer;
+      transition: box-shadow 0.2s, background 0.2s;
+    }
+    .face-target.targetable {
+      background: #78350f44; box-shadow: 0 0 0 2px #fbbf24;
+      animation: target-pulse 0.9s ease-in-out infinite;
+    }
+
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
       display: flex; align-items: center; justify-content: center; z-index: 100;
+      backdrop-filter: blur(4px);
     }
     .modal {
-      background: var(--panel); border-radius: 16px; padding: 28px;
-      max-width: 480px; width: 90%; text-align: center;
+      background: var(--panel); border-radius: 18px; padding: 32px;
+      max-width: 440px; width: 90%; text-align: center;
+      border: 1px solid #334155; box-shadow: 0 20px 50px #000a;
     }
-    .modal h2 { margin-bottom: 12px; }
-    .modal p { color: #94a3b8; margin-bottom: 20px; line-height: 1.5; }
+    .modal h2 { margin-bottom: 10px; font-size: 1.6rem; }
+    .modal p { color: var(--muted); margin-bottom: 22px; line-height: 1.5; }
     .modal-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-    /* How to play */
-    .rules-content { max-width: 700px; margin: 0 auto; line-height: 1.6; color: #cbd5e1; }
+    .rules-content { max-width: 700px; margin: 0 auto; line-height: 1.65; color: #cbd5e1; }
     .rules-content h3 { color: var(--accent); margin: 18px 0 8px; }
     .rules-content ul { margin-left: 20px; margin-bottom: 12px; }
 
     @media (max-width: 900px) {
       #deck-builder { grid-template-columns: 1fr; }
-      .card { width: 120px; min-height: 170px; }
+      .card { width: 118px; min-height: 170px; }
     }
   </style>
 </head>
 <body>
-  <!-- MAIN MENU -->
+  <button class="sound-toggle" id="sound-btn" onclick="toggleSound()">🔊 Sound On</button>
+  <div id="target-banner">
+    Choose a target <button class="btn-secondary" onclick="cancelTargeting()">Cancel</button>
+  </div>
+
+  <!-- MENU -->
   <div id="menu-screen" class="screen">
-    <h1>Hunter × Hunter<br>Nen Card Battle</h1>
-    <p>Magic: The Gathering style combat with Aura resources, Character cards, Technique spells, and full Nen affinities. Build your deck and face AI Hunters of increasing difficulty.</p>
+    <img class="title-art" src="title-gon.jpg" alt="Hunter × Hunter: Nen Card Battle — Gon" width="340" height="506" />
+    <h1>Nen Card Battle</h1>
+    <p>Magic-style combat with Aura, Characters, Techniques and full Nen affinities. Build a deck and face AI Hunters.</p>
     <div class="menu-buttons">
       <button class="btn-primary" onclick="startGame('easy')">Play vs AI (Easy)</button>
       <button class="btn-primary" onclick="startGame('medium')">Play vs AI (Medium)</button>
@@ -189,29 +310,24 @@
     <div class="rules-content">
       <h2 style="text-align:center;margin:16px 0;">How to Play</h2>
       <h3>Objective</h3>
-      <p>Reduce your opponent’s life from 20 to 0. You control Characters (creatures) and Techniques (instant/sorcery effects).</p>
-      <h3>Aura (Resources)</h3>
-      <p>At the start of each of your turns your maximum Aura increases by 1 and you gain that full amount. Spend Aura to play cards. Unused Aura does not carry over.</p>
-      <h3>Turn Structure</h3>
+      <p>Reduce opponent life from 20 to 0.</p>
+      <h3>Aura</h3>
+      <p>Max Aura +1 each turn and refills fully. Spend it to play cards.</p>
+      <h3>Turn</h3>
       <ul>
-        <li><strong>Draw</strong> – Draw 1 card.</li>
-        <li><strong>Main</strong> – Play Characters and Techniques (pay their Aura cost).</li>
-        <li><strong>Combat</strong> – Choose attackers. Opponent chooses blockers. Damage is dealt simultaneously.</li>
-        <li><strong>End</strong> – Turn passes to opponent.</li>
+        <li>Draw → Main (play cards) → Combat (attackers / blockers) → End</li>
       </ul>
-      <h3>Nen Affinities</h3>
+      <h3>Targeting</h3>
+      <p>When you play a Technique that needs a target, valid targets glow gold. Click the enemy character or the AI life total (face) to choose.</p>
+      <h3>Nen</h3>
       <ul>
-        <li><span class="nen-badge nen-enhancement">Enhancement</span> Heavy attacks &amp; durability</li>
-        <li><span class="nen-badge nen-transmutation">Transmutation</span> Elemental tricks &amp; flexibility</li>
+        <li><span class="nen-badge nen-enhancement">Enhancement</span> Power & durability</li>
+        <li><span class="nen-badge nen-transmutation">Transmutation</span> Tricks & elements</li>
         <li><span class="nen-badge nen-emission">Emission</span> Ranged attacks</li>
-        <li><span class="nen-badge nen-conjuration">Conjuration</span> Weapons, chains &amp; constructs</li>
-        <li><span class="nen-badge nen-manipulation">Manipulation</span> Control &amp; disabling</li>
-        <li><span class="nen-badge nen-specialization">Specialization</span> Unique rule-bending powers</li>
+        <li><span class="nen-badge nen-conjuration">Conjuration</span> Constructs & chains</li>
+        <li><span class="nen-badge nen-manipulation">Manipulation</span> Control</li>
+        <li><span class="nen-badge nen-specialization">Specialization</span> Unique powers</li>
       </ul>
-      <h3>Fundamentals</h3>
-      <p>Ten (defense), Zetsu (stealth/hide), Ren (power-up), Hatsu (signature ability) inspire many card effects.</p>
-      <h3>Combat</h3>
-      <p>Attackers deal their power as damage. Blockers assign damage to attackers. Excess damage from unblocked attackers hits the opponent’s life. Characters with 0 or less toughness die.</p>
     </div>
   </div>
 
@@ -239,827 +355,821 @@
   <!-- GAME -->
   <div id="game-screen" class="screen hidden">
     <div class="top-bar">
-      <div class="life-box">AI <span class="heart">♥</span> <span id="ai-life">20</span></div>
+      <div class="life-box face-target" id="ai-face" onclick="onFaceClick('ai')">
+        AI <span class="heart">♥</span> <span id="ai-life">20</span>
+      </div>
       <div class="aura-box" id="ai-aura"></div>
       <div class="phase-indicator" id="phase-label">Your Turn – Main</div>
       <div class="aura-box" id="player-aura"></div>
-      <div class="life-box">You <span class="heart">♥</span> <span id="player-life">20</span></div>
+      <div class="life-box face-target" id="player-face">
+        You <span class="heart">♥</span> <span id="player-life">20</span>
+      </div>
     </div>
     <div class="log-panel" id="game-log"></div>
     <div class="battlefield">
       <div class="zone opponent-zone">
         <div class="zone-label">Opponent Battlefield</div>
-        <div id="ai-board" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+        <div class="board-row" id="ai-board"></div>
       </div>
       <div class="zone player-zone">
         <div class="zone-label">Your Battlefield</div>
-        <div id="player-board" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+        <div class="board-row" id="player-board"></div>
       </div>
     </div>
     <div class="hand-zone" id="player-hand"></div>
     <div class="controls" id="game-controls">
-      <button class="btn-primary" id="btn-end-main" onclick="endMainPhase()">End Main / Start Combat</button>
+      <button class="btn-primary" id="btn-end-main" onclick="endMainPhase()">End Main / Combat</button>
       <button class="btn-success hidden" id="btn-confirm-attack" onclick="confirmAttackers()">Confirm Attackers</button>
       <button class="btn-secondary hidden" id="btn-skip-combat" onclick="skipCombat()">Skip Combat</button>
-      <button class="btn-primary hidden" id="btn-end-turn" onclick="endTurn()">End Turn</button>
       <button class="btn-danger" onclick="concede()">Concede</button>
     </div>
   </div>
 
-  <!-- MODALS -->
   <div id="modal-overlay" class="modal-overlay hidden">
     <div class="modal">
       <h2 id="modal-title">Victory!</h2>
       <p id="modal-text"></p>
       <div class="modal-buttons">
         <button class="btn-primary" onclick="showScreen('menu-screen'); hideModal();">Main Menu</button>
-        <button class="btn-secondary" id="modal-replay" onclick="replayLast();">Play Again</button>
+        <button class="btn-secondary" onclick="replayLast();">Play Again</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // ==================== CARD DATABASE ====================
-    const CARD_DB = [
-      // Enhancement
-      { id: 'gon', name: 'Gon Freecss', type: 'character', nen: 'enhancement', cost: 2, power: 3, toughness: 2,
-        text: 'When this enters, gain 1 life. (Enhancement – raw power)', art: '🥊' },
-      { id: 'gon-jajanken', name: 'Jajanken: Rock', type: 'technique', nen: 'enhancement', cost: 3,
-        text: 'Deal 4 damage to target character or 3 to opponent.', art: '✊' },
-      { id: 'uvogin', name: 'Uvogin', type: 'character', nen: 'enhancement', cost: 5, power: 6, toughness: 5,
-        text: 'Big Bang Impact: When this attacks, it gets +2/+0 until end of turn.', art: '💥' },
-      { id: 'netero', name: 'Isaac Netero', type: 'character', nen: 'enhancement', cost: 6, power: 5, toughness: 5,
-        text: '100-Type Guanyin Bodhisattva: Once per turn, deal 2 damage to any target.', art: '🙏' },
-      { id: 'ten', name: 'Ten – Aura Shield', type: 'technique', nen: 'enhancement', cost: 1,
-        text: 'Target character gets +0/+3 until end of turn.', art: '🛡️' },
-      { id: 'ren', name: 'Ren – Power Surge', type: 'technique', nen: 'enhancement', cost: 2,
-        text: 'Target character gets +2/+2 until end of turn.', art: '⚡' },
+<script>
+// ==================== SOUND (Web Audio API) ====================
+let audioCtx = null;
+let soundEnabled = true;
 
-      // Transmutation
-      { id: 'killua', name: 'Killua Zoldyck', type: 'character', nen: 'transmutation', cost: 3, power: 3, toughness: 2,
-        text: 'Godspeed: This character has haste (can attack the turn it enters).', art: '⚡' },
-      { id: 'hisoka', name: 'Hisoka Morow', type: 'character', nen: 'transmutation', cost: 4, power: 4, toughness: 3,
-        text: 'Bungee Gum: When this blocks or is blocked, deal 1 damage to the other character.', art: '🃏' },
-      { id: 'killua-lightning', name: 'Lightning Palm', type: 'technique', nen: 'transmutation', cost: 2,
-        text: 'Deal 2 damage to target character. It can\'t block this turn.', art: '🖐️' },
-      { id: 'bungee', name: 'Bungee Gum', type: 'technique', nen: 'transmutation', cost: 2,
-        text: 'Return target attacking character to its owner\'s hand.', art: '🫧' },
-      { id: 'zetsu', name: 'Zetsu – Vanish', type: 'technique', nen: 'transmutation', cost: 1,
-        text: 'Target character can\'t be blocked this turn.', art: '👻' },
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('sound-btn').textContent = soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+  if (soundEnabled) ensureAudio();
+}
+function playTone(freq, dur, type='square', vol=0.08) {
+  if (!soundEnabled) return;
+  ensureAudio();
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + dur);
+}
+const SFX = {
+  play: () => { playTone(440, 0.08); playTone(660, 0.1, 'triangle', 0.06); },
+  draw: () => playTone(320, 0.06, 'sine', 0.05),
+  attack: () => { playTone(180, 0.12, 'sawtooth', 0.07); playTone(90, 0.15, 'square', 0.05); },
+  damage: () => { playTone(120, 0.15, 'sawtooth', 0.09); playTone(80, 0.2, 'square', 0.06); },
+  block: () => playTone(280, 0.1, 'triangle', 0.07),
+  heal: () => { playTone(523, 0.1, 'sine'); playTone(659, 0.12, 'sine', 0.06); },
+  win: () => { [523,659,784,1046].forEach((f,i)=>setTimeout(()=>playTone(f,0.2,'sine',0.08), i*120)); },
+  lose: () => { playTone(200,0.3,'sawtooth',0.08); setTimeout(()=>playTone(100,0.4,'sawtooth',0.07),200); },
+  target: () => playTone(880, 0.05, 'sine', 0.04),
+  click: () => playTone(600, 0.03, 'square', 0.03),
+};
 
-      // Emission
-      { id: 'leorio', name: 'Leorio Paradinight', type: 'character', nen: 'emission', cost: 2, power: 2, toughness: 3,
-        text: 'Remote Punch: Once per turn, deal 1 damage to any target.', art: '👊' },
-      { id: 'razor', name: 'Razor', type: 'character', nen: 'emission', cost: 5, power: 4, toughness: 4,
-        text: 'When this enters, deal 2 damage to target character.', art: '🏐' },
-      { id: 'emission-blast', name: 'Aura Blast', type: 'technique', nen: 'emission', cost: 3,
-        text: 'Deal 3 damage to any target.', art: '💫' },
-      { id: 'silva', name: 'Silva Zoldyck', type: 'character', nen: 'emission', cost: 4, power: 4, toughness: 3,
-        text: 'Emission specialist. Deals +1 damage when attacking unblocked.', art: '👨‍💼' },
+// ==================== CARDS ====================
+const CARD_DB = [
+  { id:'gon', name:'Gon Freecss', type:'character', nen:'enhancement', cost:2, power:3, toughness:2,
+    text:'When this enters, gain 1 life.', art:'🥊', needsTarget:false },
+  { id:'gon-jajanken', name:'Jajanken: Rock', type:'technique', nen:'enhancement', cost:3,
+    text:'Deal 4 damage to target character or 3 to opponent.', art:'✊', needsTarget:true, targetMode:'enemyOrFace', dmgChar:4, dmgFace:3 },
+  { id:'uvogin', name:'Uvogin', type:'character', nen:'enhancement', cost:5, power:6, toughness:5,
+    text:'When this attacks, it gets +2/+0 until end of turn.', art:'💥' },
+  { id:'netero', name:'Isaac Netero', type:'character', nen:'enhancement', cost:6, power:5, toughness:5,
+    text:'Once per turn: deal 2 damage to any target. (Auto on entry for simplicity)', art:'🙏' },
+  { id:'ten', name:'Ten – Aura Shield', type:'technique', nen:'enhancement', cost:1,
+    text:'Target character you control gets +0/+3 until end of turn.', art:'🛡️', needsTarget:true, targetMode:'friendly', buffT:3 },
+  { id:'ren', name:'Ren – Power Surge', type:'technique', nen:'enhancement', cost:2,
+    text:'Target character you control gets +2/+2 until end of turn.', art:'⚡', needsTarget:true, targetMode:'friendly', buffP:2, buffT:2 },
+  { id:'killua', name:'Killua Zoldyck', type:'character', nen:'transmutation', cost:3, power:3, toughness:2,
+    text:'Godspeed: Haste (can attack the turn it enters).', art:'⚡' },
+  { id:'hisoka', name:'Hisoka Morow', type:'character', nen:'transmutation', cost:4, power:4, toughness:3,
+    text:'Bungee Gum: When this blocks or is blocked, deal 1 extra to the other.', art:'🃏' },
+  { id:'killua-lightning', name:'Lightning Palm', type:'technique', nen:'transmutation', cost:2,
+    text:'Deal 2 damage to target character. It can\'t block this turn.', art:'🖐️', needsTarget:true, targetMode:'enemy', dmgChar:2, cantBlock:true },
+  { id:'bungee', name:'Bungee Gum', type:'technique', nen:'transmutation', cost:2,
+    text:'Return target enemy character to its owner\'s hand.', art:'🫧', needsTarget:true, targetMode:'enemy', bounce:true },
+  { id:'zetsu', name:'Zetsu – Vanish', type:'technique', nen:'transmutation', cost:1,
+    text:'Target character you control can\'t be blocked this turn.', art:'👻', needsTarget:true, targetMode:'friendly', unblockable:true },
+  { id:'leorio', name:'Leorio Paradinight', type:'character', nen:'emission', cost:2, power:2, toughness:3,
+    text:'Remote Punch: deals 1 on entry to a target.', art:'👊' },
+  { id:'razor', name:'Razor', type:'character', nen:'emission', cost:5, power:4, toughness:4,
+    text:'When this enters, deal 2 damage to target character.', art:'🏐', needsTarget:true, targetMode:'enemy', dmgChar:2 },
+  { id:'emission-blast', name:'Aura Blast', type:'technique', nen:'emission', cost:3,
+    text:'Deal 3 damage to any target.', art:'💫', needsTarget:true, targetMode:'enemyOrFace', dmgChar:3, dmgFace:3 },
+  { id:'silva', name:'Silva Zoldyck', type:'character', nen:'emission', cost:4, power:4, toughness:3,
+    text:'Deals +1 damage when attacking unblocked.', art:'👨‍💼' },
+  { id:'kurapika', name:'Kurapika', type:'character', nen:'conjuration', cost:3, power:2, toughness:3,
+    text:'Chain Jail: When this enters, tap target character.', art:'⛓️', needsTarget:true, targetMode:'enemy', tap:true },
+  { id:'dowsing', name:'Dowsing Chain', type:'technique', nen:'conjuration', cost:1,
+    text:'Look at top 3; put one in hand, rest on bottom.', art:'🔮' },
+  { id:'judgment', name:'Judgment Chain', type:'technique', nen:'conjuration', cost:4,
+    text:'Destroy target character with power 4 or greater.', art:'⚖️', needsTarget:true, targetMode:'enemyBig' },
+  { id:'kite', name:'Kite', type:'character', nen:'conjuration', cost:4, power:3, toughness:3,
+    text:'Crazy slots: create a 2/2 weapon token.', art:'🎰' },
+  { id:'illumi', name:'Illumi Zoldyck', type:'character', nen:'manipulation', cost:4, power:3, toughness:3,
+    text:'When this enters, opponent discards a card.', art:'🪡' },
+  { id:'shalnark', name:'Shalnark', type:'character', nen:'manipulation', cost:3, power:2, toughness:2,
+    text:'Black Voice: tap target character.', art:'📱', needsTarget:true, targetMode:'enemy', tap:true },
+  { id:'control', name:'Puppet Strings', type:'technique', nen:'manipulation', cost:2,
+    text:'Gain control of target enemy character.', art:'🧵', needsTarget:true, targetMode:'enemy', steal:true },
+  { id:'shizuku', name:'Shizuku', type:'character', nen:'manipulation', cost:3, power:2, toughness:3,
+    text:'When this deals combat damage to a player, they discard.', art:'🧹' },
+  { id:'chrollo', name:'Chrollo Lucilfer', type:'character', nen:'specialization', cost:5, power:4, toughness:4,
+    text:'Skill Hunter: versatile Specialist.', art:'📖' },
+  { id:'meruem', name:'Meruem', type:'character', nen:'specialization', cost:7, power:7, toughness:7,
+    text:'When this enters, gain 3 life and draw a card.', art:'👑' },
+  { id:'neferpitou', name:'Neferpitou', type:'character', nen:'specialization', cost:5, power:3, toughness:4,
+    text:'Your characters get +1/+1 while this is in play.', art:'🐱' },
+  { id:'emperor-time', name:'Emperor Time', type:'technique', nen:'specialization', cost:3,
+    text:'Your characters get +1/+1 until end of turn.', art:'👁️' },
+  { id:'heal', name:'First Aid', type:'technique', nen:'enhancement', cost:2,
+    text:'Gain 4 life.', art:'💉' },
+  { id:'counter', name:'Hatsu Counter', type:'technique', nen:'specialization', cost:2,
+    text:'Gain 2 life (simplified counter).', art:'🛑' },
+];
 
-      // Conjuration
-      { id: 'kurapika', name: 'Kurapika', type: 'character', nen: 'conjuration', cost: 3, power: 2, toughness: 3,
-        text: 'Chain Jail: When this enters, tap target character. It doesn\'t untap next turn.', art: '⛓️' },
-      { id: 'dowsing', name: 'Dowsing Chain', type: 'technique', nen: 'conjuration', cost: 1,
-        text: 'Look at the top 3 cards of your deck. Put one into your hand, rest on bottom.', art: '🔮' },
-      { id: 'judgment', name: 'Judgment Chain', type: 'technique', nen: 'conjuration', cost: 4,
-        text: 'Destroy target character with power 4 or greater.', art: '⚖️' },
-      { id: 'kite', name: 'Kite', type: 'character', nen: 'conjuration', cost: 4, power: 3, toughness: 3,
-        text: 'Crazy Slots: When this enters, create a 2/2 weapon token (counts as character).', art: '🎰' },
+// Token helper
+function ensureToken() {
+  if (!CARD_DB.find(c => c.id === 'weapon-token')) {
+    CARD_DB.push({ id:'weapon-token', name:'Crazy Slot Weapon', type:'character', nen:'conjuration', cost:0, power:2, toughness:2, text:'Token', art:'🗡️' });
+  }
+}
 
-      // Manipulation
-      { id: 'illumi', name: 'Illumi Zoldyck', type: 'character', nen: 'manipulation', cost: 4, power: 3, toughness: 3,
-        text: 'Needle People: When this enters, opponent discards a card.', art: '🪡' },
-      { id: 'shalnark', name: 'Shalnark', type: 'character', nen: 'manipulation', cost: 3, power: 2, toughness: 2,
-        text: 'Black Voice: Tap target character.', art: '📱' },
-      { id: 'control', name: 'Puppet Strings', type: 'technique', nen: 'manipulation', cost: 2,
-        text: 'Gain control of target character until end of turn. Untap it. It gains haste.', art: '🧵' },
-      { id: 'shizuku', name: 'Shizuku', type: 'character', nen: 'manipulation', cost: 3, power: 2, toughness: 3,
-        text: 'Blinky: When this deals combat damage to a player, that player discards a card.', art: '🧹' },
+// ==================== STATE ====================
+let state = null;
+let lastDifficulty = 'medium';
+let playerDeckList = [];
+let pendingSpell = null; // { card, owner }
 
-      // Specialization
-      { id: 'chrollo', name: 'Chrollo Lucilfer', type: 'character', nen: 'specialization', cost: 5, power: 4, toughness: 4,
-        text: 'Skill Hunter: Once per turn, copy the ability of another character you control.', art: '📖' },
-      { id: 'meruem', name: 'Meruem', type: 'character', nen: 'specialization', cost: 7, power: 7, toughness: 7,
-        text: 'King of the Ants. When this enters, gain 3 life and draw a card.', art: '👑' },
-      { id: 'neferpitou', name: 'Neferpitou', type: 'character', nen: 'specialization', cost: 5, power: 3, toughness: 4,
-        text: 'Terpsichora: Characters you control get +1/+1.', art: '🐱' },
-      { id: 'emperor-time', name: 'Emperor Time', type: 'technique', nen: 'specialization', cost: 3,
-        text: 'Until end of turn, your characters get +1/+1 and you may play an extra technique.', art: '👁️' },
-      { id: 'heal', name: 'First Aid', type: 'technique', nen: 'enhancement', cost: 2,
-        text: 'Gain 4 life.', art: '💉' },
-      { id: 'counter', name: 'Hatsu Counter', type: 'technique', nen: 'specialization', cost: 2,
-        text: 'Counter target technique. (Only while a technique is being played – simplified: destroy a technique effect by healing 2).', art: '🛑' },
-    ];
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if (id === 'deck-builder-screen') renderDeckBuilder();
+  cancelTargeting();
+}
+function hideModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function showModal(title, text) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-text').textContent = text;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function log(msg) {
+  const el = document.getElementById('game-log');
+  el.innerHTML = `<div>${msg}</div>` + el.innerHTML;
+}
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function uid() { return Math.random().toString(36).slice(2, 9); }
+function cardById(id) { return CARD_DB.find(c => c.id === id); }
 
-    // ==================== STATE ====================
-    let state = null;
-    let lastDifficulty = 'medium';
-    let playerDeckList = []; // array of card ids for builder
+// ==================== DECK BUILDER ====================
+function getSavedDeck() {
+  try { const r = localStorage.getItem('hxh_nen_deck'); if (r) return JSON.parse(r); } catch(e) {}
+  return null;
+}
+function loadDefaultDeck() {
+  const counts = {
+    gon:3, killua:3, kurapika:2, leorio:2, hisoka:2, uvogin:1, netero:1, kite:1,
+    illumi:1, shalnark:1, razor:1, chrollo:1, neferpitou:1,
+    'gon-jajanken':2, 'killua-lightning':2, ten:2, ren:2, zetsu:2,
+    'emission-blast':2, judgment:1, control:1, heal:2, 'emperor-time':1,
+    bungee:1, dowsing:2
+  };
+  playerDeckList = [];
+  for (const [id, n] of Object.entries(counts))
+    for (let i = 0; i < n; i++) playerDeckList.push(id);
+  while (playerDeckList.length < 40)
+    playerDeckList.push(['gon','killua','ten','ren','heal'][Math.floor(Math.random()*5)]);
+  playerDeckList = playerDeckList.slice(0, 40);
+  renderDeckBuilder();
+}
+function clearDeck() { playerDeckList = []; renderDeckBuilder(); }
+function saveDeck() {
+  if (playerDeckList.length < 30) { alert('Need at least 30 cards.'); return; }
+  localStorage.setItem('hxh_nen_deck', JSON.stringify(playerDeckList));
+  alert('Deck saved (' + playerDeckList.length + ' cards)');
+}
+function addToDeck(id) {
+  if (playerDeckList.length >= 40) return;
+  if (playerDeckList.filter(x => x === id).length >= 3) return;
+  playerDeckList.push(id);
+  SFX.click();
+  renderDeckBuilder();
+}
+function removeFromDeck(id) {
+  const i = playerDeckList.indexOf(id);
+  if (i >= 0) playerDeckList.splice(i, 1);
+  renderDeckBuilder();
+}
+function renderDeckBuilder() {
+  const pool = document.getElementById('pool-grid');
+  pool.innerHTML = '';
+  CARD_DB.filter(c => c.id !== 'weapon-token').forEach(c => {
+    const el = createCardElement(c);
+    el.onclick = () => addToDeck(c.id);
+    pool.appendChild(el);
+  });
+  const counts = {};
+  playerDeckList.forEach(id => counts[id] = (counts[id]||0)+1);
+  document.getElementById('current-deck').innerHTML = Object.entries(counts).map(([id,n]) => {
+    const c = cardById(id);
+    return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #334155;cursor:pointer;" onclick="removeFromDeck('${id}')">
+      <span>${c.name}</span><span>×${n}</span></div>`;
+  }).join('') || '<p style="color:#64748b">Empty – click cards to add</p>';
+  document.getElementById('deck-size').textContent = `(${playerDeckList.length} / 40)`;
+}
 
-    // ==================== UTILS ====================
-    function showScreen(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-      if (id === 'deck-builder-screen') renderDeckBuilder();
+// ==================== CARD RENDER ====================
+function createCardElement(card, instance = null) {
+  const div = document.createElement('div');
+  div.className = `card nen-${card.nen}` + (card.type === 'technique' ? ' technique' : '');
+  if (instance) {
+    if (instance.tapped) div.classList.add('tapped');
+    if (instance.attacking) div.classList.add('attacking');
+    if (instance.blocking) div.classList.add('blocking');
+    div.dataset.uid = instance.uid;
+  }
+  const p = instance ? instance.power : card.power;
+  const t = instance ? instance.toughness : card.toughness;
+  div.innerHTML = `
+    <div class="card-cost">${card.cost}</div>
+    <div class="card-name">${card.name}</div>
+    <div class="card-type">${card.type === 'character' ? 'Character' : 'Technique'} — ${card.nen}</div>
+    <span class="nen-badge nen-${card.nen}">${card.nen}</span>
+    <div class="card-art">${card.art || '❓'}</div>
+    <div class="card-text">${card.text}</div>
+    ${card.type === 'character' ? `<div class="card-stats">${p}/${t}</div>` : ''}
+  `;
+  return div;
+}
+
+// ==================== TARGETING ====================
+function startTargeting(card) {
+  pendingSpell = { card, owner: 'player' };
+  document.getElementById('target-banner').classList.add('visible');
+  document.getElementById('target-banner').childNodes[0].textContent = `Choose target for ${card.name} `;
+  SFX.target();
+  updateUI(); // re-render with targetable highlights
+}
+function cancelTargeting() {
+  pendingSpell = null;
+  document.getElementById('target-banner').classList.remove('visible');
+  document.querySelectorAll('.targetable').forEach(el => el.classList.remove('targetable'));
+  updateUI();
+}
+function onFaceClick(side) {
+  if (!pendingSpell || side !== 'ai') return;
+  const mode = pendingSpell.card.targetMode;
+  if (mode === 'enemyOrFace' || mode === 'any') {
+    resolveTargetedSpell(pendingSpell.card, { type: 'face', side: 'ai' });
+  }
+}
+function onBoardClick(instance, side) {
+  if (!pendingSpell) return;
+  const card = pendingSpell.card;
+  const mode = card.targetMode;
+  if (mode === 'enemy' || mode === 'enemyOrFace') {
+    if (side !== 'ai') return;
+  } else if (mode === 'friendly') {
+    if (side !== 'player') return;
+  } else if (mode === 'enemyBig') {
+    if (side !== 'ai' || instance.power < 4) return;
+  }
+  resolveTargetedSpell(card, { type: 'character', instance, side });
+}
+
+function resolveTargetedSpell(card, target) {
+  const me = state.player;
+  const opp = state.ai;
+  // Pay & remove from hand already done when entering targeting? No — pay on confirm
+  // Actually we pay when starting playCard; for targeting we already deducted
+  log(`You play ${card.name} → ${target.type === 'face' ? 'AI face' : cardById(target.instance.id).name}`);
+
+  if (target.type === 'face') {
+    const dmg = card.dmgFace || card.dmgChar || 0;
+    if (dmg) {
+      opp.life -= dmg;
+      SFX.damage();
+      log(`${card.name} deals ${dmg} to AI.`);
+      flashFace('ai');
     }
-    function hideModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
-    function showModal(title, text) {
-      document.getElementById('modal-title').textContent = title;
-      document.getElementById('modal-text').textContent = text;
-      document.getElementById('modal-overlay').classList.remove('hidden');
+  } else {
+    const inst = target.instance;
+    if (card.dmgChar) {
+      inst.toughness -= card.dmgChar;
+      SFX.damage();
+      log(`${card.name} deals ${card.dmgChar} to ${cardById(inst.id).name}.`);
+      flashCard(inst.uid);
     }
-    function log(msg) {
-      const el = document.getElementById('game-log');
-      el.innerHTML = `<div>${msg}</div>` + el.innerHTML;
+    if (card.cantBlock) inst.cantBlock = true;
+    if (card.tap) { inst.tapped = true; inst.skipUntap = true; log('Tapped.'); }
+    if (card.bounce) {
+      opp.board = opp.board.filter(b => b.uid !== inst.uid);
+      opp.hand.push({ ...cardById(inst.id), uid: uid() });
+      log(`Returned ${cardById(inst.id).name} to hand.`);
     }
-    function shuffle(arr) {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+    if (card.steal) {
+      opp.board = opp.board.filter(b => b.uid !== inst.uid);
+      inst.summoningSickness = false;
+      inst.tapped = false;
+      me.board.push(inst);
+      log(`Stole ${cardById(inst.id).name}!`);
+    }
+    if (card.buffP || card.buffT) {
+      inst.power += (card.buffP || 0);
+      inst.toughness += (card.buffT || 0);
+      SFX.heal();
+      log(`Buffed ${cardById(inst.id).name}.`);
+    }
+    if (card.unblockable) {
+      inst.unblockable = true;
+      log(`${cardById(inst.id).name} is unblockable this turn.`);
+    }
+    if (card.id === 'judgment' && inst.power >= 4) {
+      opp.board = opp.board.filter(b => b.uid !== inst.uid);
+      log(`Judgment Chain destroys ${cardById(inst.id).name}.`);
+      SFX.damage();
+    }
+  }
+  pendingSpell = null;
+  document.getElementById('target-banner').classList.remove('visible');
+  cleanupDead();
+  updateUI();
+  checkWin();
+}
+
+function flashCard(uid) {
+  const el = document.querySelector(`[data-uid="${uid}"]`);
+  if (el) { el.classList.add('damage-flash'); setTimeout(() => el.classList.remove('damage-flash'), 450); }
+}
+function flashFace(side) {
+  const el = document.getElementById(side === 'ai' ? 'ai-face' : 'player-face');
+  el.style.transition = 'none';
+  el.style.background = '#7f1d1d88';
+  setTimeout(() => { el.style.transition = 'background 0.4s'; el.style.background = ''; }, 50);
+}
+
+// ==================== GAME ====================
+function buildDeckFromList(list) {
+  return shuffle(list.map(id => ({ ...cardById(id), uid: uid() })));
+}
+function aiDeckForDifficulty(diff) {
+  let ids = [];
+  if (diff === 'easy') {
+    ids = ['gon','gon','killua','leorio','ten','ten','ren','heal','heal','killua-lightning','zetsu','gon-jajanken','kurapika','hisoka','emission-blast','dowsing','dowsing','bungee','control','shalnark','illumi','kite','razor','uvogin','chrollo','meruem','neferpitou','netero','silva','shizuku','judgment','emperor-time','gon','killua','leorio','ten'];
+  } else if (diff === 'medium') {
+    ids = ['killua','killua','hisoka','kurapika','chrollo','uvogin','netero','razor','illumi','neferpitou','meruem','gon','kite','shalnark','silva','shizuku','leorio','gon-jajanken','killua-lightning','emission-blast','judgment','control','emperor-time','ren','ren','ten','zetsu','heal','bungee','dowsing','dowsing','counter','hisoka','kurapika','chrollo'];
+  } else {
+    ids = ['meruem','meruem','chrollo','chrollo','netero','uvogin','neferpitou','hisoka','hisoka','killua','kurapika','razor','illumi','silva','kite','shalnark','shizuku','emperor-time','judgment','control','gon-jajanken','emission-blast','killua-lightning','ren','ren','ten','zetsu','heal','bungee','dowsing','counter','netero','uvogin','meruem'];
+  }
+  while (ids.length < 40) ids.push('gon');
+  return buildDeckFromList(ids.slice(0, 40));
+}
+
+function startGame(diff) {
+  ensureAudio();
+  lastDifficulty = diff;
+  let pList = getSavedDeck();
+  if (!pList || pList.length < 30) { loadDefaultDeck(); pList = playerDeckList; }
+  ensureToken();
+  state = {
+    difficulty: diff, turn: 1, active: 'player', phase: 'main',
+    player: { life:20, maxAura:1, aura:1, deck: buildDeckFromList(pList), hand:[], board:[], grave:[] },
+    ai: { life:20, maxAura:1, aura:1, deck: aiDeckForDifficulty(diff), hand:[], board:[], grave:[] },
+    attackers: []
+  };
+  for (let i = 0; i < 5; i++) { drawCard(state.player); drawCard(state.ai); }
+  showScreen('game-screen');
+  log(`Game start — ${diff.toUpperCase()}. You go first.`);
+  updateUI();
+}
+
+function drawCard(who) {
+  if (who.deck.length === 0) {
+    who.life -= 1;
+    log((who === state.player ? 'You' : 'AI') + ' mill 1 life.');
+    checkWin();
+    return null;
+  }
+  const c = who.deck.shift();
+  who.hand.push(c);
+  if (who === state.player) SFX.draw();
+  return c;
+}
+
+function updateUI() {
+  if (!state) return;
+  document.getElementById('player-life').textContent = state.player.life;
+  document.getElementById('ai-life').textContent = state.ai.life;
+
+  const renderAura = (id, who) => {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    for (let i = 0; i < who.maxAura; i++) {
+      const p = document.createElement('div');
+      p.className = 'aura-pip' + (i >= who.aura ? ' empty' : '');
+      el.appendChild(p);
+    }
+  };
+  renderAura('player-aura', state.player);
+  renderAura('ai-aura', state.ai);
+
+  const phaseMap = {
+    main: state.active === 'player' ? 'Your Turn — Main' : 'AI Turn',
+    combat: 'Declare Attackers',
+    end: 'End Step'
+  };
+  document.getElementById('phase-label').textContent = phaseMap[state.phase] || state.phase;
+
+  // Boards
+  renderBoard('player-board', state.player.board, 'player');
+  renderBoard('ai-board', state.ai.board, 'ai');
+
+  // Face targeting
+  document.getElementById('ai-face').classList.toggle('targetable',
+    !!(pendingSpell && (pendingSpell.card.targetMode === 'enemyOrFace' || pendingSpell.card.targetMode === 'any')));
+
+  // Hand
+  const handEl = document.getElementById('player-hand');
+  handEl.innerHTML = '';
+  state.player.hand.forEach(c => {
+    const el = createCardElement(c);
+    const canPlay = state.active === 'player' && state.phase === 'main' && c.cost <= state.player.aura && !pendingSpell;
+    if (!canPlay) el.classList.add('unplayable');
+    el.onclick = () => { if (canPlay) playCard(c); };
+    handEl.appendChild(el);
+  });
+
+  document.getElementById('btn-end-main').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'main' && !pendingSpell));
+  document.getElementById('btn-confirm-attack').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
+  document.getElementById('btn-skip-combat').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
+}
+
+function renderBoard(elId, board, side) {
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  board.forEach(inst => {
+    const card = cardById(inst.id);
+    const elCard = createCardElement(card, inst);
+
+    // Targeting highlight
+    if (pendingSpell) {
+      const mode = pendingSpell.card.targetMode;
+      let ok = false;
+      if ((mode === 'enemy' || mode === 'enemyOrFace') && side === 'ai') ok = true;
+      if (mode === 'friendly' && side === 'player') ok = true;
+      if (mode === 'enemyBig' && side === 'ai' && inst.power >= 4) ok = true;
+      if (ok) {
+        elCard.classList.add('targetable');
+        elCard.onclick = () => onBoardClick(inst, side);
       }
-      return arr;
+    } else if (side === 'player' && state.active === 'player' && state.phase === 'combat') {
+      if (!inst.tapped && !inst.summoningSickness) {
+        elCard.onclick = () => toggleAttacker(inst);
+      }
     }
-    function uid() { return Math.random().toString(36).slice(2, 9); }
-    function cardById(id) { return CARD_DB.find(c => c.id === id); }
+    el.appendChild(elCard);
+  });
+}
 
-    // ==================== DECK BUILDER ====================
-    function getSavedDeck() {
-      try {
-        const raw = localStorage.getItem('hxh_nen_deck');
-        if (raw) return JSON.parse(raw);
-      } catch(e) {}
-      return null;
+function playCard(card) {
+  if (card.cost > state.player.aura) return;
+  state.player.aura -= card.cost;
+  state.player.hand = state.player.hand.filter(c => c.uid !== card.uid);
+  SFX.play();
+
+  // Needs targeting?
+  if (card.needsTarget) {
+    // Put card "on stack" conceptually — we already paid
+    startTargeting(card);
+    // Special: for characters that need target on enter, treat similarly
+    if (card.type === 'character') {
+      // Will place after target resolved — handle in resolve for enter effects
+      // Simpler: place now, apply effect after target
+      const inst = makeInstance(card);
+      state.player.board.push(inst);
+      // Target will apply the enter effect
     }
-    function loadDefaultDeck() {
-      // Balanced 40-card deck
-      const counts = {
-        gon: 3, killua: 3, kurapika: 2, leorio: 2, hisoka: 2, uvogin: 1, netero: 1,
-        kite: 1, illumi: 1, shalnark: 1, razor: 1, chrollo: 1, neferpitou: 1,
-        'gon-jajanken': 2, 'killua-lightning': 2, ten: 2, ren: 2, zetsu: 2,
-        'emission-blast': 2, judgment: 1, control: 1, heal: 2, 'emperor-time': 1,
-        bungee: 1, dowsing: 2, 'aura-blast': 0
-      };
-      playerDeckList = [];
-      for (const [id, n] of Object.entries(counts)) {
-        for (let i = 0; i < n; i++) playerDeckList.push(id);
+    updateUI();
+    return;
+  }
+
+  // No target needed
+  log(`You play ${card.name}.`);
+  if (card.type === 'character') {
+    const inst = makeInstance(card);
+    applyEnterEffects(card, inst, 'player');
+    state.player.board.push(inst);
+  } else {
+    resolveUntargeted(card, 'player');
+  }
+  cleanupDead();
+  updateUI();
+  checkWin();
+}
+
+function makeInstance(card) {
+  return {
+    uid: card.uid || uid(), id: card.id,
+    power: card.power, toughness: card.toughness,
+    tapped: false,
+    summoningSickness: card.id !== 'killua',
+    attacking: false, blocking: false
+  };
+}
+
+function applyEnterEffects(card, inst, owner) {
+  const me = owner === 'player' ? state.player : state.ai;
+  const opp = owner === 'player' ? state.ai : state.player;
+  if (card.id === 'gon') { me.life = Math.min(30, me.life + 1); log('+1 life (Gon).'); SFX.heal(); }
+  if (card.id === 'kite') {
+    ensureToken();
+    me.board.push(makeInstance(cardById('weapon-token')));
+    log('Kite creates 2/2 weapon.');
+  }
+  if (card.id === 'illumi' && opp.hand.length) {
+    opp.hand.pop();
+    log('Illumi: opponent discards.');
+  }
+  if (card.id === 'meruem') {
+    me.life = Math.min(30, me.life + 3);
+    drawCard(me);
+    log('Meruem: +3 life & draw.');
+    SFX.heal();
+  }
+  if (card.id === 'neferpitou') {
+    me.board.forEach(b => { b.power++; b.toughness++; });
+    log('Terpsichora: board +1/+1.');
+  }
+  // Enter effects that needed targets are handled via needsTarget path
+}
+
+function resolveUntargeted(card, owner) {
+  const me = owner === 'player' ? state.player : state.ai;
+  if (card.id === 'heal') { me.life = Math.min(30, me.life + 4); log('+4 life.'); SFX.heal(); }
+  if (card.id === 'counter') { me.life = Math.min(30, me.life + 2); log('+2 life.'); SFX.heal(); }
+  if (card.id === 'emperor-time') {
+    me.board.forEach(b => { b.power++; b.toughness++; });
+    log('Emperor Time: +1/+1.');
+  }
+  if (card.id === 'dowsing' && me.deck.length) {
+    const top = me.deck.splice(0, 3);
+    if (top[0]) me.hand.push(top[0]);
+    me.deck.push(...top.slice(1));
+    log('Dowsing: added a card.');
+  }
+}
+
+// Note: when character with needsTarget is played, we already put it on board in playCard.
+// The target resolution only applies the effect (dmg/tap etc).
+// For techniques with needsTarget we do NOT put them on board.
+
+function cleanupDead() {
+  ['player','ai'].forEach(side => {
+    const who = state[side];
+    const dead = who.board.filter(b => b.toughness <= 0);
+    dead.forEach(d => log(`${cardById(d.id)?.name || 'Token'} destroyed.`));
+    who.board = who.board.filter(b => b.toughness > 0);
+  });
+}
+
+function endMainPhase() {
+  if (pendingSpell) return;
+  state.phase = 'combat';
+  state.attackers = [];
+  state.player.board.forEach(b => b.attacking = false);
+  log('Combat — select attackers, then Confirm.');
+  updateUI();
+}
+function toggleAttacker(inst) {
+  if (inst.summoningSickness) { log('Summoning sickness.'); return; }
+  inst.attacking = !inst.attacking;
+  if (inst.attacking) { state.attackers.push(inst.uid); SFX.click(); }
+  else state.attackers = state.attackers.filter(u => u !== inst.uid);
+  updateUI();
+}
+function confirmAttackers() {
+  const attackers = state.player.board.filter(b => b.attacking);
+  if (!attackers.length) { skipCombat(); return; }
+  SFX.attack();
+  // AI blocks
+  const available = state.ai.board.filter(b => !b.tapped && !b.cantBlock);
+  const blockersMap = {};
+  attackers.forEach(atk => {
+    if (atk.unblockable) return;
+    const viable = available.filter(bl => !Object.values(blockersMap).includes(bl.uid));
+    if (!viable.length) return;
+    viable.sort((a,b) => b.power - a.power);
+    blockersMap[atk.uid] = viable[0].uid;
+    viable[0].blocking = true;
+  });
+  resolveCombat(attackers, blockersMap, 'player');
+  endTurn();
+}
+function skipCombat() { endTurn(); }
+
+function resolveCombat(attackers, blockersMap, attackingSide) {
+  const atkP = attackingSide === 'player' ? state.player : state.ai;
+  const defP = attackingSide === 'player' ? state.ai : state.player;
+  attackers.forEach(atk => {
+    const blUid = blockersMap[atk.uid];
+    if (blUid) {
+      const bl = defP.board.find(b => b.uid === blUid);
+      if (bl) {
+        bl.toughness -= atk.power;
+        atk.toughness -= bl.power;
+        log(`${cardById(atk.id).name} fights ${cardById(bl.id).name}.`);
+        SFX.block();
+        if (atk.id === 'hisoka') bl.toughness -= 1;
+        if (bl.id === 'hisoka') atk.toughness -= 1;
+        flashCard(atk.uid); flashCard(bl.uid);
       }
-      // Fill to 40 with more commons
-      while (playerDeckList.length < 40) {
-        playerDeckList.push(['gon', 'killua', 'ten', 'ren', 'heal'][Math.floor(Math.random()*5)]);
-      }
-      playerDeckList = playerDeckList.slice(0, 40);
-      renderDeckBuilder();
+    } else {
+      let dmg = atk.power;
+      if (atk.id === 'silva') dmg += 1;
+      if (atk.id === 'uvogin') dmg += 2;
+      defP.life -= dmg;
+      log(`${cardById(atk.id).name} deals ${dmg} to ${attackingSide === 'player' ? 'AI' : 'you'}.`);
+      SFX.damage();
+      flashFace(attackingSide === 'player' ? 'ai' : 'player');
+      if (atk.id === 'shizuku' && defP.hand.length) { defP.hand.pop(); log('Blinky discards.'); }
     }
-    function clearDeck() { playerDeckList = []; renderDeckBuilder(); }
-    function saveDeck() {
-      if (playerDeckList.length < 30) {
-        alert('Deck needs at least 30 cards (recommended 40).');
-        return;
-      }
-      localStorage.setItem('hxh_nen_deck', JSON.stringify(playerDeckList));
-      alert('Deck saved! (' + playerDeckList.length + ' cards)');
-    }
-    function addToDeck(id) {
-      if (playerDeckList.length >= 40) return;
-      const count = playerDeckList.filter(x => x === id).length;
-      if (count >= 3) return; // max 3 copies
-      playerDeckList.push(id);
-      renderDeckBuilder();
-    }
-    function removeFromDeck(id) {
-      const idx = playerDeckList.indexOf(id);
-      if (idx >= 0) playerDeckList.splice(idx, 1);
-      renderDeckBuilder();
-    }
-    function renderDeckBuilder() {
-      const pool = document.getElementById('pool-grid');
-      pool.innerHTML = '';
-      CARD_DB.forEach(c => {
-        const el = createCardElement(c, false);
-        el.onclick = () => addToDeck(c.id);
-        pool.appendChild(el);
+    atk.attacking = false;
+    atk.tapped = true;
+  });
+  defP.board.forEach(b => b.blocking = false);
+  cleanupDead();
+  checkWin();
+}
+
+function endTurn() {
+  state.player.board.forEach(b => { b.unblockable = false; b.cantBlock = false; });
+  state.ai.board.forEach(b => { b.unblockable = false; b.cantBlock = false; });
+  if (state.active === 'player') {
+    state.active = 'ai';
+    startAiTurn();
+  } else {
+    state.active = 'player';
+    state.turn++;
+    startPlayerTurn();
+  }
+}
+function startPlayerTurn() {
+  state.player.maxAura = Math.min(10, state.player.maxAura + 1);
+  state.player.aura = state.player.maxAura;
+  state.player.board.forEach(b => {
+    if (!b.skipUntap) b.tapped = false;
+    b.skipUntap = false;
+    b.summoningSickness = false;
+    b.attacking = false;
+  });
+  drawCard(state.player);
+  state.phase = 'main';
+  log(`— Your Turn ${state.turn} (Aura ${state.player.maxAura}) —`);
+  updateUI();
+  checkWin();
+}
+function startAiTurn() {
+  state.ai.maxAura = Math.min(10, state.ai.maxAura + 1);
+  state.ai.aura = state.ai.maxAura;
+  state.ai.board.forEach(b => {
+    if (!b.skipUntap) b.tapped = false;
+    b.skipUntap = false;
+    b.summoningSickness = false;
+  });
+  drawCard(state.ai);
+  state.phase = 'main';
+  log(`— AI Turn (Aura ${state.ai.maxAura}) —`);
+  updateUI();
+  setTimeout(aiPlayCards, 500);
+}
+
+function aiPlayCards() {
+  let guard = 12;
+  while (guard-- > 0) {
+    const affordable = state.ai.hand
+      .filter(c => c.cost <= state.ai.aura)
+      .sort((a,b) => {
+        if (a.type !== b.type) return a.type === 'character' ? -1 : 1;
+        return b.cost - a.cost;
       });
-      const deckEl = document.getElementById('current-deck');
-      const counts = {};
-      playerDeckList.forEach(id => counts[id] = (counts[id] || 0) + 1);
-      deckEl.innerHTML = Object.entries(counts).map(([id, n]) => {
-        const c = cardById(id);
-        return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #334155;cursor:pointer;" onclick="removeFromDeck('${id}')">
-          <span>${c.name}</span><span>×${n}</span></div>`;
-      }).join('') || '<p style="color:#64748b">Empty – click cards to add</p>';
-      document.getElementById('deck-size').textContent = `(${playerDeckList.length} / 40)`;
-    }
-
-    // ==================== CARD RENDERING ====================
-    function createCardElement(card, interactive = true, instance = null) {
-      const div = document.createElement('div');
-      div.className = 'card' + (card.type === 'technique' ? ' technique' : '');
-      if (instance) {
-        if (instance.tapped) div.classList.add('tapped');
-        if (instance.attacking) div.classList.add('attacking');
-        if (instance.blocking) div.classList.add('blocking');
-        div.dataset.uid = instance.uid;
+    if (!affordable.length) break;
+    const card = affordable[0];
+    state.ai.aura -= card.cost;
+    state.ai.hand = state.ai.hand.filter(c => c.uid !== card.uid);
+    log(`AI plays ${card.name}.`);
+    SFX.play();
+    if (card.type === 'character') {
+      const inst = makeInstance(card);
+      applyEnterEffects(card, inst, 'ai');
+      // Simple auto-target for AI enter effects
+      if (card.needsTarget && card.targetMode === 'enemy' && state.player.board.length) {
+        const t = state.player.board[0];
+        if (card.dmgChar) { t.toughness -= card.dmgChar; flashCard(t.uid); }
+        if (card.tap) { t.tapped = true; t.skipUntap = true; }
       }
-      const nenClass = 'nen-' + card.nen;
-      div.innerHTML = `
-        <div class="card-cost">${card.cost}</div>
-        <div class="card-name">${card.name}</div>
-        <div class="card-type">${card.type === 'character' ? 'Character' : 'Technique'} — ${card.nen}</div>
-        <span class="nen-badge ${nenClass}">${card.nen}</span>
-        <div class="card-art">${card.art || '❓'}</div>
-        <div class="card-text">${card.text}</div>
-        ${card.type === 'character' ? `<div class="card-stats">${(instance ? instance.power : card.power)}/${(instance ? instance.toughness : card.toughness)}</div>` : ''}
-      `;
-      return div;
-    }
-
-    // ==================== GAME LOGIC ====================
-    function buildDeckFromList(list) {
-      return shuffle(list.map(id => ({ ...cardById(id), uid: uid() })));
-    }
-    function aiDeckForDifficulty(diff) {
-      // Stronger decks for higher difficulty
-      let ids = [];
-      if (diff === 'easy') {
-        ids = ['gon','gon','killua','leorio','ten','ten','ren','heal','heal','killua-lightning',
-               'zetsu','gon-jajanken','kurapika','hisoka','emission-blast','dowsing','dowsing',
-               'bungee','control','shalnark','illumi','kite','razor','uvogin','chrollo','meruem',
-               'neferpitou','netero','silva','shizuku','judgment','emperor-time','gon','killua','leorio','ten'];
-      } else if (diff === 'medium') {
-        ids = ['killua','killua','hisoka','kurapika','chrollo','uvogin','netero','razor','illumi',
-               'neferpitou','meruem','gon','kite','shalnark','silva','shizuku','leorio',
-               'gon-jajanken','killua-lightning','emission-blast','judgment','control','emperor-time',
-               'ren','ren','ten','zetsu','heal','bungee','dowsing','dowsing','counter','hisoka','kurapika','chrollo'];
-      } else {
-        ids = ['meruem','meruem','chrollo','chrollo','netero','uvogin','neferpitou','hisoka','hisoka',
-               'killua','kurapika','razor','illumi','silva','kite','shalnark','shizuku',
-               'emperor-time','judgment','control','gon-jajanken','emission-blast','killua-lightning',
-               'ren','ren','ten','zetsu','heal','bungee','dowsing','counter','netero','uvogin','meruem'];
-      }
-      while (ids.length < 40) ids.push('gon');
-      return buildDeckFromList(ids.slice(0, 40));
-    }
-
-    function startGame(diff) {
-      lastDifficulty = diff;
-      let pList = getSavedDeck();
-      if (!pList || pList.length < 30) {
-        loadDefaultDeck();
-        pList = playerDeckList;
-      }
-      const playerDeck = buildDeckFromList(pList);
-      const aiDeck = aiDeckForDifficulty(diff);
-
-      state = {
-        difficulty: diff,
-        turn: 1,
-        active: 'player', // or 'ai'
-        phase: 'main', // draw already done, main, combat, end
-        player: {
-          life: 20, maxAura: 1, aura: 1,
-          deck: playerDeck, hand: [], board: [], grave: []
-        },
-        ai: {
-          life: 20, maxAura: 1, aura: 1,
-          deck: aiDeck, hand: [], board: [], grave: []
-        },
-        attackers: [],
-        blockers: {}, // attackerUid -> blockerUid
-        pendingTargets: null
-      };
-      // Opening hands
-      for (let i = 0; i < 5; i++) {
-        drawCard(state.player);
-        drawCard(state.ai);
-      }
-      showScreen('game-screen');
-      log(`Game start – ${diff.toUpperCase()} difficulty. You go first.`);
-      updateUI();
-      // Player already has aura 1, can play
-    }
-
-    function drawCard(who) {
-      if (who.deck.length === 0) {
-        // Fatigue damage
-        who.life -= 1;
-        log((who === state.player ? 'You' : 'AI') + ' decked out and loses 1 life.');
-        checkWin();
-        return null;
-      }
-      const c = who.deck.shift();
-      who.hand.push(c);
-      return c;
-    }
-
-    function updateUI() {
-      if (!state) return;
-      document.getElementById('player-life').textContent = state.player.life;
-      document.getElementById('ai-life').textContent = state.ai.life;
-      // Aura pips
-      const renderAura = (elId, who) => {
-        const el = document.getElementById(elId);
-        el.innerHTML = '';
-        for (let i = 0; i < who.maxAura; i++) {
-          const pip = document.createElement('div');
-          pip.className = 'aura-pip' + (i >= who.aura ? ' empty' : '');
-          el.appendChild(pip);
-        }
-      };
-      renderAura('player-aura', state.player);
-      renderAura('ai-aura', state.ai);
-
-      // Phase
-      const phaseMap = {
-        main: state.active === 'player' ? 'Your Turn – Main Phase' : 'AI Turn – Main',
-        combat: state.active === 'player' ? 'Your Turn – Declare Attackers' : 'AI Combat',
-        block: 'Declare Blockers',
-        end: 'End Step'
-      };
-      document.getElementById('phase-label').textContent = phaseMap[state.phase] || state.phase;
-
-      // Boards
-      renderBoard('player-board', state.player.board, true);
-      renderBoard('ai-board', state.ai.board, false);
-
-      // Hand
-      const handEl = document.getElementById('player-hand');
-      handEl.innerHTML = '';
-      state.player.hand.forEach(c => {
-        const el = createCardElement(c, true);
-        const canPlay = state.active === 'player' && state.phase === 'main' && c.cost <= state.player.aura;
-        if (!canPlay) el.classList.add('unplayable');
-        el.onclick = () => {
-          if (canPlay) playCard(c);
-        };
-        handEl.appendChild(el);
-      });
-
-      // Controls
-      document.getElementById('btn-end-main').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'main'));
-      document.getElementById('btn-confirm-attack').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
-      document.getElementById('btn-skip-combat').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
-      document.getElementById('btn-end-turn').classList.toggle('hidden', true);
-    }
-
-    function renderBoard(elId, board, isPlayer) {
-      const el = document.getElementById(elId);
-      el.innerHTML = '';
-      board.forEach(inst => {
-        const card = cardById(inst.id);
-        const elCard = createCardElement(card, true, inst);
-        if (isPlayer && state.active === 'player' && state.phase === 'combat' && !inst.tapped && !inst.summoningSickness) {
-          elCard.onclick = () => toggleAttacker(inst);
-        }
-        if (!isPlayer && state.phase === 'block') {
-          // clicking enemy to choose blocker later
-        }
-        el.appendChild(elCard);
-      });
-    }
-
-    function playCard(card) {
-      if (card.cost > state.player.aura) return;
-      state.player.aura -= card.cost;
-      state.player.hand = state.player.hand.filter(c => c.uid !== card.uid);
-      log(`You play ${card.name} (cost ${card.cost}).`);
-
-      if (card.type === 'character') {
-        const inst = {
-          uid: card.uid, id: card.id,
-          power: card.power, toughness: card.toughness,
-          tapped: false, summoningSickness: true,
-          attacking: false, blocking: false
-        };
-        // Special enters effects
-        if (card.id === 'gon') { state.player.life = Math.min(20, state.player.life + 1); log('+1 life from Gon.'); }
-        if (card.id === 'kurapika') {
-          const targets = state.ai.board.filter(b => !b.tapped);
-          if (targets.length) {
-            const t = targets[0];
-            t.tapped = true;
-            t.skipUntap = true;
-            log(`Chain Jail taps ${cardById(t.id).name}.`);
+      state.ai.board.push(inst);
+    } else {
+      // AI techniques — auto pick
+      if (card.needsTarget) {
+        if (card.targetMode === 'enemyOrFace' || card.targetMode === 'enemy') {
+          if (state.player.board.length && card.dmgChar) {
+            const t = state.player.board[0];
+            t.toughness -= card.dmgChar;
+            log(`AI ${card.name} hits ${cardById(t.id).name}.`);
+            flashCard(t.uid); SFX.damage();
+          } else if (card.dmgFace) {
+            state.player.life -= card.dmgFace;
+            log(`AI ${card.name} hits you for ${card.dmgFace}.`);
+            flashFace('player'); SFX.damage();
           }
-        }
-        if (card.id === 'kite') {
-          state.player.board.push({
-            uid: uid(), id: 'weapon-token', power: 2, toughness: 2,
-            tapped: false, summoningSickness: true, attacking: false, blocking: false
-          });
-          // temporary token entry
-          CARD_DB.push({ id: 'weapon-token', name: 'Crazy Slot Weapon', type: 'character', nen: 'conjuration', cost: 0, power: 2, toughness: 2, text: 'Token', art: '🗡️' });
-          log('Kite creates a 2/2 weapon.');
-        }
-        if (card.id === 'illumi') {
-          if (state.ai.hand.length) {
-            state.ai.hand.pop();
-            log('Illumi forces AI to discard.');
+          if (card.bounce && state.player.board.length) {
+            const t = state.player.board.pop();
+            state.player.hand.push({ ...cardById(t.id), uid: uid() });
           }
-        }
-        if (card.id === 'shalnark') {
-          const targets = state.ai.board.filter(b => !b.tapped);
-          if (targets.length) { targets[0].tapped = true; log('Black Voice taps a character.'); }
-        }
-        if (card.id === 'razor') {
-          if (state.ai.board.length) {
-            const t = state.ai.board[0];
-            t.toughness -= 2;
-            log(`Razor deals 2 to ${cardById(t.id).name}.`);
-            cleanupDead();
-          }
-        }
-        if (card.id === 'meruem') {
-          state.player.life = Math.min(30, state.player.life + 3);
-          drawCard(state.player);
-          log('Meruem: +3 life and draw.');
-        }
-        if (card.id === 'neferpitou') {
-          state.player.board.forEach(b => { b.power += 1; b.toughness += 1; });
-          log('Terpsichora buffs your board +1/+1.');
-        }
-        state.player.board.push(inst);
-      } else {
-        // Techniques
-        resolveTechnique(card, 'player');
-      }
-      updateUI();
-      checkWin();
-    }
-
-    function resolveTechnique(card, owner) {
-      const isPlayer = owner === 'player';
-      const me = isPlayer ? state.player : state.ai;
-      const opp = isPlayer ? state.ai : state.player;
-
-      switch (card.id) {
-        case 'gon-jajanken':
-          if (opp.board.length) {
-            const t = opp.board.reduce((a,b) => a.toughness < b.toughness ? a : b);
-            t.toughness -= 4;
-            log(`Jajanken Rock deals 4 to ${cardById(t.id).name}.`);
-          } else {
-            opp.life -= 3;
-            log('Jajanken Rock hits opponent for 3.');
-          }
-          break;
-        case 'ten':
-          if (me.board.length) {
-            me.board[0].toughness += 3;
-            log('Ten: +0/+3 on a character.');
-          }
-          break;
-        case 'ren':
-          if (me.board.length) {
-            me.board[0].power += 2; me.board[0].toughness += 2;
-            log('Ren: +2/+2.');
-          }
-          break;
-        case 'killua-lightning':
-          if (opp.board.length) {
-            const t = opp.board[0];
-            t.toughness -= 2;
-            t.cantBlock = true;
-            log('Lightning Palm deals 2 and prevents blocking.');
-          }
-          break;
-        case 'bungee':
-          if (opp.board.some(b => b.attacking)) {
-            const t = opp.board.find(b => b.attacking);
-            opp.board = opp.board.filter(b => b.uid !== t.uid);
-            opp.hand.push({ ...cardById(t.id), uid: uid() });
-            log(`Bungee Gum returns ${cardById(t.id).name} to hand.`);
-          } else if (opp.board.length) {
-            const t = opp.board[0];
-            opp.board = opp.board.filter(b => b.uid !== t.uid);
-            opp.hand.push({ ...cardById(t.id), uid: uid() });
-            log(`Bungee Gum returns ${cardById(t.id).name}.`);
-          }
-          break;
-        case 'zetsu':
-          if (me.board.length) {
-            me.board[0].unblockable = true;
-            log('Zetsu: character is unblockable this turn.');
-          }
-          break;
-        case 'emission-blast':
-          if (opp.board.length) {
-            opp.board[0].toughness -= 3;
-            log('Aura Blast deals 3 to a character.');
-          } else {
-            opp.life -= 3;
-            log('Aura Blast hits face for 3.');
-          }
-          break;
-        case 'judgment':
-          const big = opp.board.filter(b => b.power >= 4);
-          if (big.length) {
-            const t = big[0];
-            opp.board = opp.board.filter(b => b.uid !== t.uid);
-            log(`Judgment Chain destroys ${cardById(t.id).name}.`);
-          }
-          break;
-        case 'control':
-          if (opp.board.length) {
-            const t = opp.board.shift();
+          if (card.steal && state.player.board.length) {
+            const t = state.player.board.pop();
             t.summoningSickness = false;
-            t.tapped = false;
-            me.board.push(t);
-            log(`You steal ${cardById(t.id).name} until end of turn (simplified permanent for now).`);
-          }
-          break;
-        case 'heal':
-          me.life = Math.min(30, me.life + 4);
-          log('+4 life.');
-          break;
-        case 'emperor-time':
-          me.board.forEach(b => { b.power += 1; b.toughness += 1; });
-          log('Emperor Time: +1/+1 to your characters.');
-          break;
-        case 'dowsing':
-          if (me.deck.length) {
-            const top = me.deck.splice(0, 3);
-            if (top.length) {
-              me.hand.push(top[0]);
-              me.deck.push(...top.slice(1));
-              log('Dowsing Chain: added a card to hand.');
-            }
-          }
-          break;
-        case 'counter':
-          me.life = Math.min(30, me.life + 2);
-          log('Hatsu Counter (simplified): gain 2 life.');
-          break;
-        default:
-          log(`${card.name} resolves.`);
-      }
-      cleanupDead();
-    }
-
-    function cleanupDead() {
-      ['player', 'ai'].forEach(side => {
-        const who = state[side];
-        const dead = who.board.filter(b => b.toughness <= 0);
-        dead.forEach(d => log(`${cardById(d.id)?.name || 'Token'} is destroyed.`));
-        who.board = who.board.filter(b => b.toughness > 0);
-      });
-    }
-
-    function endMainPhase() {
-      state.phase = 'combat';
-      state.attackers = [];
-      state.player.board.forEach(b => { b.attacking = false; });
-      log('Combat phase – select attackers then confirm.');
-      updateUI();
-    }
-
-    function toggleAttacker(inst) {
-      if (inst.summoningSickness && !(cardById(inst.id)?.id === 'killua')) return; // haste exception already handled by flag
-      // Killua has haste: we set summoningSickness false on entry for him
-      if (inst.id === 'killua') inst.summoningSickness = false;
-      if (inst.summoningSickness) {
-        log('That character has summoning sickness.');
-        return;
-      }
-      inst.attacking = !inst.attacking;
-      if (inst.attacking) state.attackers.push(inst.uid);
-      else state.attackers = state.attackers.filter(u => u !== inst.uid);
-      updateUI();
-    }
-
-    function confirmAttackers() {
-      if (state.attackers.length === 0) {
-        skipCombat();
-        return;
-      }
-      // AI blocks
-      const attackers = state.player.board.filter(b => b.attacking);
-      const availableBlockers = state.ai.board.filter(b => !b.tapped && !b.cantBlock);
-      state.blockers = {};
-      // Simple AI block: block highest power attacker with highest toughness blocker that can survive or trade
-      attackers.forEach(atk => {
-        if (atk.unblockable) return;
-        const viable = availableBlockers.filter(bl => !Object.values(state.blockers).includes(bl.uid));
-        if (viable.length === 0) return;
-        // Prefer blocker that can kill attacker or survive
-        viable.sort((a,b) => b.power - a.power);
-        const chosen = viable[0];
-        state.blockers[atk.uid] = chosen.uid;
-        chosen.blocking = true;
-      });
-      resolveCombat(attackers, state.blockers, 'player');
-      state.phase = 'end';
-      endTurn();
-    }
-
-    function skipCombat() {
-      state.phase = 'end';
-      endTurn();
-    }
-
-    function resolveCombat(attackers, blockersMap, attackingSide) {
-      const atkPlayer = attackingSide === 'player' ? state.player : state.ai;
-      const defPlayer = attackingSide === 'player' ? state.ai : state.player;
-
-      attackers.forEach(atk => {
-        const blockerUid = blockersMap[atk.uid];
-        if (blockerUid) {
-          const bl = defPlayer.board.find(b => b.uid === blockerUid);
-          if (bl) {
-            bl.toughness -= atk.power;
-            atk.toughness -= bl.power;
-            log(`${cardById(atk.id).name} (${atk.power}) fights ${cardById(bl.id).name} (${bl.power}).`);
-            // Hisoka trigger
-            if (atk.id === 'hisoka' || bl.id === 'hisoka') {
-              if (atk.id === 'hisoka') bl.toughness -= 1;
-              if (bl.id === 'hisoka') atk.toughness -= 1;
-              log('Bungee Gum deals 1 extra.');
-            }
-          }
-        } else {
-          // Unblocked
-          let dmg = atk.power;
-          if (atk.id === 'silva') dmg += 1;
-          if (atk.id === 'uvogin') dmg += 2; // Big Bang on attack
-          defPlayer.life -= dmg;
-          log(`${cardById(atk.id).name} deals ${dmg} combat damage to ${attackingSide === 'player' ? 'AI' : 'you'}.`);
-          if (atk.id === 'shizuku' && attackingSide === 'player') {
-            if (defPlayer.hand.length) { defPlayer.hand.pop(); log('Blinky discards a card.'); }
+            state.ai.board.push(t);
           }
         }
-        atk.attacking = false;
-        atk.tapped = true;
-      });
-      defPlayer.board.forEach(b => b.blocking = false);
-      cleanupDead();
-      checkWin();
-    }
-
-    function endTurn() {
-      // Clear temporary flags
-      state.player.board.forEach(b => {
-        b.unblockable = false; b.cantBlock = false;
-        if (b.skipUntap) { b.skipUntap = false; } // already tapped
-      });
-      state.ai.board.forEach(b => {
-        b.unblockable = false; b.cantBlock = false;
-      });
-
-      if (state.active === 'player') {
-        state.active = 'ai';
-        startAiTurn();
       } else {
-        state.active = 'player';
-        state.turn++;
-        startPlayerTurn();
+        resolveUntargeted(card, 'ai');
       }
     }
+    cleanupDead();
+    if (state.player.life <= 0 || state.ai.life <= 0) { updateUI(); checkWin(); return; }
+  }
+  updateUI();
+  setTimeout(aiCombat, 600);
+}
 
-    function startPlayerTurn() {
-      state.player.maxAura = Math.min(10, state.player.maxAura + 1);
-      state.player.aura = state.player.maxAura;
-      // Untap
-      state.player.board.forEach(b => {
-        if (!b.skipUntap) b.tapped = false;
-        b.summoningSickness = false;
-        b.attacking = false;
-      });
-      drawCard(state.player);
-      state.phase = 'main';
-      log(`--- Your Turn ${state.turn} (Aura ${state.player.maxAura}) ---`);
-      updateUI();
-      checkWin();
-    }
+function aiCombat() {
+  const possible = state.ai.board.filter(b => !b.tapped && !b.summoningSickness);
+  let attackers = [];
+  if (state.difficulty === 'easy') attackers = possible.filter(() => Math.random() > 0.45);
+  else if (state.difficulty === 'medium') attackers = possible.filter(b => b.power >= 2 || possible.length <= 2);
+  else attackers = possible;
+  attackers.forEach(a => a.attacking = true);
+  if (!attackers.length) { log('AI skips combat.'); endTurn(); return; }
+  log(`AI attacks with ${attackers.length}.`);
+  SFX.attack();
+  const blockersMap = {};
+  const myB = state.player.board.filter(b => !b.tapped);
+  attackers.forEach(atk => {
+    if (atk.unblockable) return;
+    const viable = myB.filter(bl => !Object.values(blockersMap).includes(bl.uid));
+    if (!viable.length) return;
+    viable.sort((a,b) => b.toughness - a.toughness);
+    const chosen = viable.find(bl => bl.power >= atk.toughness) || (atk.power >= 3 ? viable[0] : null);
+    if (chosen) { blockersMap[atk.uid] = chosen.uid; chosen.blocking = true; }
+  });
+  resolveCombat(attackers, blockersMap, 'ai');
+  endTurn();
+}
 
-    function startAiTurn() {
-      state.ai.maxAura = Math.min(10, state.ai.maxAura + 1);
-      state.ai.aura = state.ai.maxAura;
-      state.ai.board.forEach(b => {
-        if (!b.skipUntap) b.tapped = false;
-        b.summoningSickness = false;
-      });
-      drawCard(state.ai);
-      state.phase = 'main';
-      log(`--- AI Turn (Aura ${state.ai.maxAura}) ---`);
-      updateUI();
+function checkWin() {
+  if (!state) return;
+  if (state.player.life <= 0) {
+    SFX.lose();
+    showModal('Defeat…', `AI reduced you to 0. Difficulty: ${state.difficulty}.`);
+    state = null;
+  } else if (state.ai.life <= 0) {
+    SFX.win();
+    showModal('Victory!', `You defeated the ${state.difficulty} AI Hunter!`);
+    state = null;
+  }
+}
+function concede() {
+  if (confirm('Concede?')) {
+    SFX.lose();
+    showModal('Conceded', 'You surrendered.');
+    state = null;
+  }
+}
+function replayLast() { hideModal(); startGame(lastDifficulty); }
 
-      // AI plays cards
-      setTimeout(() => aiPlayCards(), 600);
-    }
-
-    function aiPlayCards() {
-      // Play all affordable characters first, then techniques
-      let played = true;
-      while (played) {
-        played = false;
-        // Prefer characters
-        const affordable = state.ai.hand
-          .filter(c => c.cost <= state.ai.aura)
-          .sort((a,b) => {
-            if (a.type !== b.type) return a.type === 'character' ? -1 : 1;
-            return b.cost - a.cost;
-          });
-        if (affordable.length === 0) break;
-        const card = affordable[0];
-        state.ai.aura -= card.cost;
-        state.ai.hand = state.ai.hand.filter(c => c.uid !== card.uid);
-        log(`AI plays ${card.name}.`);
-
-        if (card.type === 'character') {
-          const inst = {
-            uid: card.uid, id: card.id,
-            power: card.power, toughness: card.toughness,
-            tapped: false, summoningSickness: card.id !== 'killua',
-            attacking: false, blocking: false
-          };
-          if (card.id === 'meruem') {
-            state.ai.life = Math.min(30, state.ai.life + 3);
-            drawCard(state.ai);
-          }
-          if (card.id === 'neferpitou') {
-            state.ai.board.forEach(b => { b.power++; b.toughness++; });
-          }
-          if (card.id === 'razor' && state.player.board.length) {
-            state.player.board[0].toughness -= 2;
-          }
-          if (card.id === 'illumi' && state.player.hand.length) {
-            state.player.hand.pop();
-            log('AI Illumi discards your card.');
-          }
-          state.ai.board.push(inst);
-        } else {
-          resolveTechnique(card, 'ai');
-        }
-        played = true;
-        cleanupDead();
-        if (state.player.life <= 0 || state.ai.life <= 0) { updateUI(); checkWin(); return; }
-      }
-      updateUI();
-      setTimeout(() => aiCombat(), 700);
-    }
-
-    function aiCombat() {
-      const possible = state.ai.board.filter(b => !b.tapped && !b.summoningSickness);
-      // Attack with all if advantageous or random based on difficulty
-      let attackers = [];
-      if (state.difficulty === 'easy') {
-        attackers = possible.filter(() => Math.random() > 0.4);
-      } else if (state.difficulty === 'medium') {
-        attackers = possible.filter(b => b.power >= 2 || possible.length <= 2);
-      } else {
-        attackers = possible; // always attack hard
-      }
-      attackers.forEach(a => { a.attacking = true; });
-
-      if (attackers.length === 0) {
-        log('AI skips combat.');
-        endTurn();
-        return;
-      }
-      log(`AI attacks with ${attackers.length} character(s).`);
-      // Player auto-blocks simply for speed (or could pause – auto for this version)
-      const blockersMap = {};
-      const myBlockers = state.player.board.filter(b => !b.tapped);
-      attackers.forEach(atk => {
-        if (atk.unblockable) return;
-        const viable = myBlockers.filter(bl => !Object.values(blockersMap).includes(bl.uid));
-        if (viable.length === 0) return;
-        // Block if we can kill or reduce damage
-        viable.sort((a,b) => b.toughness - a.toughness);
-        const chosen = viable.find(bl => bl.power >= atk.toughness) || viable[0];
-        if (chosen && (chosen.power >= atk.power || atk.power >= 3)) {
-          blockersMap[atk.uid] = chosen.uid;
-          chosen.blocking = true;
-        }
-      });
-      resolveCombat(attackers, blockersMap, 'ai');
-      endTurn();
-    }
-
-    function checkWin() {
-      if (state.player.life <= 0) {
-        showModal('Defeat...', `The AI Hunter reduced you to 0 life. Difficulty: ${state.difficulty}.`);
-        state = null;
-      } else if (state.ai.life <= 0) {
-        showModal('Victory!', `You defeated the ${state.difficulty} AI Hunter!`);
-        state = null;
-      }
-    }
-
-    function concede() {
-      if (confirm('Concede the game?')) {
-        showModal('Conceded', 'You surrendered the match.');
-        state = null;
-      }
-    }
-
-    function replayLast() {
-      hideModal();
-      startGame(lastDifficulty);
-    }
-
-    // Init
-    loadDefaultDeck();
-  </script>
+// Init
+loadDefaultDeck();
+// First user gesture unlocks audio
+document.body.addEventListener('click', () => ensureAudio(), { once: true });
+</script>
 </body>
 </html>
