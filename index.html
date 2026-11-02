@@ -264,6 +264,113 @@
     .mode-card { background: var(--panel); border-radius: 12px; padding: 16px 12px; border: 1px solid #243044; text-align: center; cursor: pointer; transition: transform 0.15s, border-color 0.2s; }
     .mode-card:hover { transform: translateY(-3px); border-color: var(--accent); }
 
+    /* ===== CARD INSPECTION MODAL ===== */
+    .card-inspect-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center; z-index: 200;
+      backdrop-filter: blur(4px);
+    }
+    .card-inspect-modal.hidden { display: none !important; }
+    .card-inspect-content {
+      background: var(--panel); border-radius: 18px; padding: 24px;
+      max-width: 400px; width: 90%; text-align: center;
+      border: 2px solid var(--accent); box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      position: relative;
+    }
+    .card-inspect-close {
+      position: absolute; top: 10px; right: 12px; background: none; border: none;
+      color: var(--muted); font-size: 24px; cursor: pointer;
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+    }
+    .card-inspect-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .card-inspect-art {
+      width: 200px; height: 300px; border-radius: 12px; margin: 0 auto 16px;
+      border: 1px solid #334155; overflow: hidden; background: #0a0f1a;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card-inspect-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-inspect-name { font-size: 1.5rem; font-weight: 900; color: var(--gold); margin-bottom: 4px; }
+    .card-inspect-type { font-size: 0.9rem; color: var(--muted); margin-bottom: 8px; }
+    .card-inspect-nen { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; }
+    .card-inspect-text { font-size: 0.95rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 16px; }
+    .card-inspect-stats { font-size: 1.2rem; font-weight: 900; color: var(--gold); margin-bottom: 16px; }
+    .play-card-btn {
+      background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;
+      padding: 10px 20px; font-size: 1rem; font-weight: 700; border-radius: 8px;
+      cursor: pointer; width: 100%;
+    }
+    .play-card-btn:hover { filter: brightness(1.1); }
+    .play-card-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .cancel-inspect-btn {
+      background: var(--panel2); color: var(--text); border: 1px solid #334155;
+      padding: 8px 16px; font-size: 0.9rem; border-radius: 6px; cursor: pointer;
+      margin-top: 8px;
+    }
+    .cancel-inspect-btn:hover { background: rgba(255,255,255,0.1); }
+
+    /* ===== CARD SELECTION MODAL (Dowsing Chain) ===== */
+    .card-select-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center; z-index: 200;
+      backdrop-filter: blur(4px);
+    }
+    .card-select-modal.hidden { display: none !important; }
+    .card-select-content {
+      background: var(--panel); border-radius: 18px; padding: 24px;
+      max-width: 450px; width: 90%; text-align: center;
+      border: 1px solid #334155; box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      position: relative;
+    }
+    .card-select-close {
+      position: absolute; top: 10px; right: 12px; background: none; border: none;
+      color: var(--muted); font-size: 24px; cursor: pointer;
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+    }
+    .card-select-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .card-select-header {
+      font-size: 1.1rem; font-weight: 700; color: var(--gold); margin-bottom: 16px;
+    }
+    .card-select-grid {
+      display: flex; gap: 12px; justify-content: center; margin-bottom: 16px;
+    }
+    .card-select-card {
+      width: 120px; height: 180px; border-radius: 12px;
+      background: var(--panel2); border: 2px solid #334155;
+      cursor: pointer; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card-select-card:hover { transform: translateY(-4px); }
+    .card-select-card.selected {
+      border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 0 20px rgba(251,191,36,0.3);
+    }
+    .card-select-card-art {
+      width: 100%; height: 90px; border-radius: 8px 8px 0 0;
+      overflow: hidden; background: #0a0f1a; display: flex; align-items: center; justify-content: center;
+    }
+    .card-select-card-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-select-card-name { font-size: 0.85rem; font-weight: 700; color: var(--text); padding: 6px 4px; text-align: center; }
+    .card-select-card-stats { font-size: 0.8rem; color: var(--muted); padding: 0 4px 4px; text-align: center; }
+    .card-select-card-cost {
+      position: absolute; top: 4px; right: 4px; background: var(--accent); color: #111;
+      width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 900;
+    }
+    .card-select-actions {
+      display: flex; gap: 8px; justify-content: center;
+    }
+    .btn-play-selected {
+      background: linear-gradient(135deg, #22c55e, #15803d); color: #fff; border: none;
+      padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;
+    }
+    .btn-play-selected:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-cancel-select {
+      background: var(--panel2); color: var(--text); border: 1px solid #334155;
+      padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;
+    }
+
     /* Card sizing - larger on mobile for readability */
     @media (max-width: 900px) {
       .card { width: 120px; height: 180px; font-size: 9.5px; }
@@ -400,6 +507,7 @@
     <div class="controls" id="game-controls">
       <button class="btn-primary" id="btn-end-main" onclick="endMainPhase()">End Main / Combat</button>
       <button class="btn-success hidden" id="btn-confirm-attack" onclick="confirmAttackers()">Confirm Attackers</button>
+<button class="btn-secondary hidden" id="btn-play-card" onclick="playInspectedCard()">PLAY CARD</button>
       <button class="btn-secondary hidden" id="btn-skip-combat" onclick="skipCombat()">Skip Combat</button>
       <button class="btn-danger" onclick="concede()">Concede</button>
     </div>
@@ -413,6 +521,24 @@
       <div class="modal-buttons">
         <button class="btn-primary" onclick="showScreen('menu-screen'); hideModal()">Main Menu</button>
         <button class="btn-secondary" onclick="replayLast()">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD INSPECTION MODAL (enlarged hand card view) -->
+  <div id="card-inspect-modal" class="card-inspect-modal hidden">
+    <div class="card-inspect-content" id="card-inspect-modal-text"></div>
+  </div>
+
+  <!-- CARD SELECTION MODAL (Dowsing Chain) -->
+  <div id="card-select-modal" class="card-select-modal hidden">
+    <div class="card-select-content">
+      <button class="card-select-close" onclick="document.getElementById('card-select-modal').classList.add('hidden'); dowsingSelection = null;">✕</button>
+      <div class="card-select-header">Dowsing Chain — Choose one card to take</div>
+      <div class="card-select-grid" id="card-select-grid"></div>
+      <div class="card-select-actions">
+        <button class="btn-play-selected" id="btn-play-selected" disabled>Take Selected</button>
+        <button class="btn-cancel-select" onclick="document.getElementById('card-select-modal').classList.add('hidden'); dowsingSelection = null;">Cancel</button>
       </div>
     </div>
   </div>
@@ -566,6 +692,8 @@ let state = null;
 let lastDifficulty = 'medium';
 let playerDeckList = [];
 let pendingSpell = null;
+let inspectingCard = null;       // card currently being inspected (null when not inspecting)
+let dowsingSelection = null;     // { cards: [], selectedIdx: null } for Dowsing Chain
 let collection = JSON.parse(localStorage.getItem('hxh_collection') || '{}');
 let playerXP = parseInt(localStorage.getItem('hxh_xp') || '0');
 let playerLevel = parseInt(localStorage.getItem('hxh_level') || '1');
@@ -724,6 +852,90 @@ function cancelTargeting() {
   document.getElementById('target-banner').classList.remove('visible');
   document.querySelectorAll('.targetable').forEach(el => el.classList.remove('targetable'));
   updateUI();
+}
+// ==================== CARD INSPECTION ====================
+function inspectCard(card) {
+  if (pendingSpell) return;
+  inspectingCard = card;
+  document.getElementById('card-inspect-modal').classList.remove('hidden');
+  const m = document.getElementById('card-inspect-modal-text');
+  const nenColors = { enhancement: '#22c55e', transmutation: '#a855f7', emission: '#f97316', conjuration: '#06b6d4', manipulation: '#ec4899', specialization: '#f59e0b' };
+  const nenColor = nenColors[card.nen] || '#64748b';
+  m.innerHTML = `<button class="card-inspect-close" onclick="closeInspect()">✕</button>
+    <div class="card-inspect-art"><img src="hxh-nen-battle/art-${card.id}.jpg" /></div>
+    <div class="card-inspect-name">${card.name}</div>
+    <div class="card-inspect-type">${card.type === 'character' ? 'Character' : 'Technique'} — ${card.nen}</div>
+    <span class="card-inspect-nen" style="background:${nenColor};">${card.nen} • ${card.rarity}</span>
+    <div class="card-inspect-text">${card.text}</div>
+    ${card.type === 'character' ? `<div class="card-inspect-stats">${card.power}/${card.toughness}</div>` : ''}
+    <button class="play-card-btn" onclick="playInspectedCard()">PLAY CARD</button>
+    <button class="cancel-inspect-btn" onclick="closeInspect()">Close</button>`;;
+  const inspImg = document.querySelector('#card-inspect-modal-text img');
+  if (inspImg) {
+    inspImg.addEventListener('error', () => { inspImg.src = getFallbackArtUrl(card); inspImg.style.display = 'block'; });
+  }
+  updateUI();
+}
+function closeInspect() {
+  inspectingCard = null;
+  document.getElementById('card-inspect-modal').classList.add('hidden');
+  updateUI();
+}
+function playInspectedCard() {
+  if (!inspectingCard) return;
+  const card = inspectingCard;
+  closeInspect();
+  playCard(card);
+}
+// ==================== DOWSING CHAIN SELECTION ====================
+function showCardSelection(cards, onSelect) {
+  document.getElementById('card-select-modal').classList.remove('hidden');
+  const grid = document.getElementById('card-select-grid');
+  grid.innerHTML = '';
+  cards.forEach((c, idx) => {
+    const el = document.createElement('div');
+    el.className = 'card-select-card';
+    el.onclick = () => {
+      document.querySelectorAll('.card-select-card').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      dowsingSelection.selectedIdx = idx;
+      document.getElementById('btn-play-selected').disabled = false;
+    };
+    const nenColors = { enhancement: '#22c55e', transmutation: '#a855f7', emission: '#f97316', conjuration: '#06b6d4', manipulation: '#ec4899', specialization: '#f59e0b' };
+    const color = nenColors[c.nen] || '#64748b';
+    el.innerHTML = `
+      <div class="card-select-card-art"><img src="hxh-nen-battle/art-${c.id}.jpg" /></div>
+      <div class="card-select-card-name">${c.name}</div>
+      ${c.type === 'character' ? `<div class="card-select-card-stats">${c.power}/${c.toughness}</div>` : ''}
+      <div class="card-select-card-cost">${c.cost}</div>
+    `;
+    const img = el.querySelector('img');
+    if (img) {
+      img.addEventListener('error', () => { img.src = getFallbackArtUrl(c); img.style.display = 'block'; });
+    }
+    grid.appendChild(el);
+  });
+  document.getElementById('btn-play-selected').disabled = true;
+  document.getElementById('btn-play-selected').onclick = () => {
+    const idx = dowsingSelection.selectedIdx;
+    if (idx >= 0) {
+      document.getElementById('card-select-modal').classList.add('hidden');
+      resolveDowsingSelection(idx);
+    }
+  };
+}
+function resolveDowsingSelection(selectedIdx) {
+  if (!dowsingSelection || !dowsingSelection.cards[selectedIdx]) return;
+  const chosen = dowsingSelection.cards[selectedIdx];
+  const others = dowsingSelection.cards.filter((_, i) => i !== selectedIdx);
+  const me = state.player;
+  me.hand.push(chosen);
+  me.deck.push(...others);
+  log(`Dowsing: took ${cardById(chosen.id).name}.`);
+  dowsingSelection = null;
+  cleanupDead();
+  updateUI();
+  checkWin();
 }
 function onFaceClick(side) {
   if (!pendingSpell || side !== 'ai') return;
@@ -931,8 +1143,10 @@ function updateUI() {
   state.player.hand.forEach(c => {
     const el = createCardElement(c);
     const canPlay = state.active === 'player' && state.phase === 'main' && c.cost <= state.player.aura && !pendingSpell;
-    if (!canPlay) el.classList.add('unplayable');
-    el.onclick = () => { if (canPlay) playCard(c); };
+    const isInspecting = inspectingCard && inspectingCard.uid === c.uid;
+    if (!canPlay || isInspecting) el.classList.add('unplayable');
+    if (isInspecting) el.classList.add('inspected');
+    el.onclick = () => { if (!pendingSpell) inspectCard(c); };
     el.oncontextmenu = (e) => { e.preventDefault(); showCardInspect(c); };
     handEl.appendChild(el);
   });
@@ -940,6 +1154,7 @@ function updateUI() {
   document.getElementById('btn-end-main').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'main' && !pendingSpell));
   document.getElementById('btn-confirm-attack').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
   document.getElementById('btn-skip-combat').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
+  document.getElementById('btn-play-card').classList.toggle('hidden', !inspectingCard || state.active !== 'player' || state.phase !== 'main' || pendingSpell);
 }
 
 function renderBoard(elId, board, side) {
@@ -1066,10 +1281,20 @@ function resolveUntargeted(card, owner) {
     log('Emperor Time: +1/+1 until end of turn.');
   }
   if (card.id === 'dowsing' && me.deck.length) {
-    const top = me.deck.splice(0, 3);
-    if (top[0]) me.hand.push(top[0]);
-    me.deck.push(...top.slice(1));
-    log('Dowsing: added a card.');
+    const top = me.deck.splice(0, Math.min(3, me.deck.length));
+    if (me === state.player) {
+      // Player: show card selection UI
+      dowsingSelection = { cards: top };
+      showCardSelection(top, (selectedIdx) => resolveDowsingSelection(selectedIdx));
+      return;
+    } else {
+      // AI: auto-pick - prefer character cards, otherwise first card
+      const bestIdx = top.findIndex(c => c.type === 'character');
+      const pickIdx = bestIdx >= 0 ? bestIdx : 0;
+      me.hand.push(top[pickIdx]);
+      me.deck.push(...top.slice(0, pickIdx), ...top.slice(pickIdx + 1));
+      log(`AI Dowsing: took ${cardById(top[pickIdx]).name}.`);
+    }
   }
   if (card.id === 'bungee' && opp.board.length) {
     const t = opp.board.pop();
