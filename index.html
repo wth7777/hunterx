@@ -264,6 +264,22 @@
     .mode-card { background: var(--panel); border-radius: 12px; padding: 16px 12px; border: 1px solid #243044; text-align: center; cursor: pointer; transition: transform 0.15s, border-color 0.2s; }
     .mode-card:hover { transform: translateY(-3px); border-color: var(--accent); }
 
+    /* ===== AI CARD PLAY REVEAL ===== */
+    .ai-reveal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: center; z-index: 250;
+    }
+    .ai-reveal-overlay.hidden { display: none !important; }
+    .ai-reveal-card {
+      background: var(--panel); border-radius: 14px; padding: 16px 12px;
+      border: 2px solid var(--accent); box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      max-width: 210px; text-align: center;
+    }
+    .ai-reveal-label {
+      display: block; font-size: 11px; color: var(--accent); font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;
+    }
+
     /* ===== CARD INSPECTION MODAL ===== */
     .card-inspect-modal {
       position: fixed; inset: 0; background: rgba(0,0,0,0.85);
@@ -500,6 +516,12 @@
       <div class="life-box face-target" id="player-face">You <span class="heart">♥</span> <span id="player-life">20</span></div>
     </div>
     <div class="log-panel" id="game-log"></div>
+    <div id="ai-reveal-overlay" class="ai-reveal-overlay hidden">
+      <div class="ai-reveal-card">
+        <span class="ai-reveal-label">AI Plays</span>
+        <div id="ai-reveal-card-content"></div>
+      </div>
+    </div>
     <div class="battlefield">
       <div class="zone opponent-zone"><div class="zone-label">Opponent</div><div class="board-row" id="ai-board"></div></div>
       <div class="zone player-zone"><div class="zone-label">You</div><div class="board-row" id="player-board"></div></div>
@@ -1343,6 +1365,7 @@ function startGame(diff) {
   if (!pList || pList.length < 30) { loadDefaultDeck(); pList = playerDeckList; }
   ensureToken();
   ensureCollection();
+  document.getElementById('game-log').innerHTML = '';  // Clear log from previous match
   state = {
     difficulty: diff, turn: 1, active: 'player', phase: 'main',
     player: { life:20, maxAura:1, aura:1, deck: buildDeckFromList(pList), hand:[], board:[], grave:[] },
@@ -1735,10 +1758,25 @@ function startAiTurn() {
   state.phase = 'main';
   log(`— AI Turn (Aura ${state.ai.maxAura}) —`);
   updateUI();
-  setTimeout(aiPlayCards, 600);
+  setTimeout(() => aiPlayCards(), 600);
 }
 
-function aiPlayCards() {
+// ==================== AI CARD PLAY REVEAL ====================
+function showAIPlayReveal(card) {
+  const content = document.getElementById('ai-reveal-card-content');
+  const el = createCardElement(card);
+  el.style.transform = 'scale(1.15)';
+  el.style.margin = '0 auto';
+  content.innerHTML = '';
+  content.appendChild(el);
+  document.getElementById('ai-reveal-overlay').classList.remove('hidden');
+}
+function hideAIPlayReveal() {
+  document.getElementById('ai-reveal-overlay').classList.add('hidden');
+  document.getElementById('ai-reveal-card-content').innerHTML = '';
+}
+
+async function aiPlayCards() {
   if (!state) return;  // Guard: game may have ended
   let guard = 12;
   while (guard-- > 0) {
@@ -1754,6 +1792,10 @@ function aiPlayCards() {
     state.ai.hand = state.ai.hand.filter(c => c.uid !== card.uid);
     log(`AI plays ${card.name}.`);
     SFX.play();
+    // Reveal the AI's card visually for ~2 seconds before resolving
+    showAIPlayReveal(card);
+    await new Promise(r => setTimeout(r, 2000));
+    hideAIPlayReveal();
     if (card.type === 'character') {
       const inst = makeInstance(card);
       applyEnterEffects(card, inst, 'ai');
