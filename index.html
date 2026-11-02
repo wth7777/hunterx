@@ -118,7 +118,7 @@
     .btn-success { background: linear-gradient(135deg, #22c55e, #15803d); color: #fff; }
 
     .sound-toggle {
-      position: fixed; top: 12px; right: 12px; z-index: 60;
+      position: fixed; bottom: 14px; right: 14px; z-index: 60;
       background: var(--panel2); color: var(--text); border-radius: 999px;
       padding: 8px 14px; font-size: 12px; border: 1px solid #334155;
     }
@@ -834,6 +834,24 @@ function sfxWithNen(name, card) {
   if (f.extraFreq) {
     playNote({ freq: 440 * f.extraFreq, dur: 0.15, type: 'sine', vol: f.extraVol * masterVolume * sfxVolume, when: t });
   }
+};
+
+// ===== Title jingle (plays on menu / title screen) =====
+let titleJinglePlaying = false;
+function titleJingle() {
+  if (!soundEnabled || !audioCtx || titleJinglePlaying) return;
+  titleJinglePlaying = true;
+  const t = audioCtx.currentTime;
+  const melody = [
+    { f: 330, d: 0.18 }, { f: 415, d: 0.18 }, { f: 495, d: 0.18 }, { f: 554, d: 0.2 },
+    { f: 659, d: 0.22 }, { f: 554, d: 0.12 }, { f: 659, d: 0.22 }, { f: 830, d: 0.35 },
+  ];
+  melody.forEach((note, i) => {
+    playNote({ freq: note.f, dur: note.d, type: 'triangle', vol: 0.09, when: t + i * 0.15 });
+  });
+  playNote({ freq: 110, dur: 0.5, type: 'sawtooth', vol: 0.06, when: t + 1.0 });
+  playNoise({ dur: 0.15, vol: 0.04, when: t + 1.0 });
+  setTimeout(() => { titleJinglePlaying = false; }, 1600);
 };
 
 // ==================== CARD DATABASE ====================
@@ -1824,6 +1842,7 @@ function showScreen(id) {
   if (id === 'modes-screen') renderModes();
   cancelTargeting();
   if (id !== 'game-screen') stopMusic();
+  if (id === 'menu-screen' && soundEnabled) titleJingle();
 }
 function hideModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 function showModal(title, text) {
