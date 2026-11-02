@@ -533,12 +533,12 @@
   <!-- CARD SELECTION MODAL (Dowsing Chain) -->
   <div id="card-select-modal" class="card-select-modal hidden">
     <div class="card-select-content">
-      <button class="card-select-close" onclick="document.getElementById('card-select-modal').classList.add('hidden'); dowsingSelection = null;">✕</button>
+      <button class="card-select-close" onclick="cancelDowsing(); document.getElementById('card-select-modal').classList.add('hidden');">✕</button>
       <div class="card-select-header">Dowsing Chain — Choose one card to take</div>
       <div class="card-select-grid" id="card-select-grid"></div>
       <div class="card-select-actions">
         <button class="btn-play-selected" id="btn-play-selected" disabled>Take Selected</button>
-        <button class="btn-cancel-select" onclick="document.getElementById('card-select-modal').classList.add('hidden'); dowsingSelection = null;">Cancel</button>
+        <button class="btn-cancel-select" onclick="cancelDowsing(); document.getElementById('card-select-modal').classList.add('hidden');">Cancel</button>
       </div>
     </div>
   </div>
@@ -856,6 +856,11 @@ function cancelTargeting() {
 // ==================== CARD INSPECTION ====================
 function inspectCard(card) {
   if (pendingSpell) return;
+  // If same card is already being inspected, close instead of re-opening
+  if (inspectingCard && inspectingCard.uid === card.uid) {
+    closeInspect();
+    return;
+  }
   inspectingCard = card;
   document.getElementById('card-inspect-modal').classList.remove('hidden');
   const m = document.getElementById('card-inspect-modal-text');
@@ -936,6 +941,13 @@ function resolveDowsingSelection(selectedIdx) {
   cleanupDead();
   updateUI();
   checkWin();
+}
+function cancelDowsing() {
+  if (!dowsingSelection) return;
+  const me = state.player;
+  me.deck.unshift(...dowsingSelection.cards);
+  dowsingSelection = null;
+  updateUI();
 }
 function onFaceClick(side) {
   if (!pendingSpell || side !== 'ai') return;
@@ -1147,6 +1159,7 @@ function updateUI() {
     if (!canPlay || isInspecting) el.classList.add('unplayable');
     if (isInspecting) el.classList.add('inspected');
     el.onclick = () => { if (!pendingSpell) inspectCard(c); };
+    el.ontouchstart = (e) => { e.stopPropagation(); };
     el.oncontextmenu = (e) => { e.preventDefault(); showCardInspect(c); };
     handEl.appendChild(el);
   });
