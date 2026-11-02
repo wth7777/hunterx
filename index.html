@@ -526,8 +526,8 @@
   </div>
 
   <!-- CARD INSPECTION MODAL (enlarged hand card view) -->
-  <div id="card-inspect-modal" class="card-inspect-modal hidden">
-    <div class="card-inspect-content" id="card-inspect-modal-text"></div>
+  <div id="card-inspect-modal" class="card-inspect-modal hidden" onclick="closeInspect()">
+    <div class="card-inspect-content" id="card-inspect-modal-text" onclick="event.stopPropagation()"></div>
   </div>
 
   <!-- CARD SELECTION MODAL (Dowsing Chain) -->
