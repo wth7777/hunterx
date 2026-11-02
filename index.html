@@ -1249,8 +1249,10 @@ function replayLast() { hideModal(); startGame(lastDifficulty); }
 
 // ==================== UI NAVIGATION ====================
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('visible'));
-  document.getElementById(id).classList.add('visible');
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('visible'); s.classList.add('hidden'); });
+  const dest = document.getElementById(id);
+  dest.classList.remove('hidden');
+  dest.classList.add('visible');
   if (id === 'deck-builder-screen') renderDeckBuilder();
   if (id === 'collection-screen') renderCollection();
   if (id === 'modes-screen') renderModes();
