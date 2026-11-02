@@ -889,6 +889,13 @@ function closeInspect() {
 function playInspectedCard() {
   if (!inspectingCard) return;
   const card = inspectingCard;
+  const canPlay = state.active === 'player' && state.phase === 'main' && card.cost <= state.player.aura && !pendingSpell;
+  if (!canPlay) {
+    if (card.cost > state.player.aura) {
+      showModal('Cannot Play', card.name + ' costs ' + card.cost + ' aura but you only have ' + state.player.aura + '.');
+    }
+    return;
+  }
   closeInspect();
   playCard(card);
 }
@@ -1167,7 +1174,10 @@ function updateUI() {
   document.getElementById('btn-end-main').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'main' && !pendingSpell));
   document.getElementById('btn-confirm-attack').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
   document.getElementById('btn-skip-combat').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
-  document.getElementById('btn-play-card').classList.toggle('hidden', !inspectingCard || state.active !== 'player' || state.phase !== 'main' || pendingSpell);
+  const playCardBtn = document.getElementById('btn-play-card');
+  const canPlayInspected = inspectingCard && state.active === 'player' && state.phase === 'main' && inspectingCard.cost <= state.player.aura && !pendingSpell;
+  playCardBtn.classList.toggle('hidden', !inspectingCard || state.active !== 'player' || state.phase !== 'main' || pendingSpell);
+  playCardBtn.disabled = !canPlayInspected;
 }
 
 function renderBoard(elId, board, side) {
