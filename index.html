@@ -419,6 +419,7 @@
       <div class="hero-name">GON</div>
       <div class="hero-brand">HUNTER × HUNTER</div>
       <div class="hero-sub">NEN CARD BATTLE</div>
+    <div id="menu-xp" style="text-align:center;color:var(--muted);font-size:12px;margin:8px 0;"></div>
     </div>
     <div class="menu-buttons">
       <button class="btn-primary" onclick="startGame('easy')">Story — Easy</button>
@@ -1480,6 +1481,10 @@ function playCard(card) {
   state.player.aura -= card.cost;
   state.player.hand = state.player.hand.filter(c => c.uid !== card.uid);
   SFX.play();
+  // Award XP for playing high-rarity cards
+  if (card.rarity === 'legendary') addXP(7);
+  else if (card.rarity === 'epic') addXP(5);
+  else if (card.rarity === 'rare') addXP(3);
 
   if (card.needsTarget) {
     startTargeting(card);
@@ -1599,7 +1604,12 @@ function cleanupDead() {
   ['player','ai'].forEach(side => {
     const who = state[side];
     const dead = who.board.filter(b => b.toughness <= 0);
-    dead.forEach(d => log(`${cardById(d.id)?.name || 'Token'} destroyed.`));
+    dead.forEach(d => {
+      const c = cardById(d.id);
+      log(`${c?.name || 'Token'} destroyed.`);
+      // Award XP for destroying creatures (rarity-based)
+      if (c) addXP(c.rarity === 'legendary' ? 8 : c.rarity === 'epic' ? 6 : c.rarity === 'rare' ? 4 : 2);
+    });
     who.board = who.board.filter(b => b.toughness > 0);
   });
 }
@@ -1634,6 +1644,7 @@ function confirmAttackers() {
     viable[0].blocking = true;
   });
   resolveCombat(attackers, blockersMap, 'player');
+  if (!state) return;  // Guard: game may have ended
   endTurn();
 }
 function skipCombat() { endTurn(); }
@@ -1677,10 +1688,13 @@ function resolveCombat(attackers, blockersMap, attackingSide) {
   });
   defP.board.forEach(b => b.blocking = false);
   cleanupDead();
+  updateUI();
   checkWin();
+  if (!state) return;  // Guard: checkWin may have set state = null (game over)
 }
 
 function endTurn() {
+  if (!state) return;  // Guard: game may have ended
   state.player.board.forEach(b => { b.unblockable = false; b.cantBlock = false; });
   state.ai.board.forEach(b => { b.unblockable = false; b.cantBlock = false; });
   if (state.active === 'player') {
@@ -1693,6 +1707,7 @@ function endTurn() {
   }
 }
 function startPlayerTurn() {
+  if (!state) return;  // Guard: game may have ended
   state.player.maxAura = Math.min(10, state.player.maxAura + 1);
   state.player.aura = state.player.maxAura;
   state.player.board.forEach(b => {
@@ -1708,6 +1723,7 @@ function startPlayerTurn() {
   checkWin();
 }
 function startAiTurn() {
+  if (!state) return;  // Guard: game may have ended
   state.ai.maxAura = Math.min(10, state.ai.maxAura + 1);
   state.ai.aura = state.ai.maxAura;
   state.ai.board.forEach(b => {
@@ -1723,6 +1739,7 @@ function startAiTurn() {
 }
 
 function aiPlayCards() {
+  if (!state) return;  // Guard: game may have ended
   let guard = 12;
   while (guard-- > 0) {
     const affordable = state.ai.hand
@@ -1783,6 +1800,7 @@ function aiPlayCards() {
 }
 
 function aiCombat() {
+  if (!state) return;  // Guard: game may have ended
   const possible = state.ai.board.filter(b => !b.tapped && !b.summoningSickness);
   let attackers = [];
   if (state.difficulty === 'easy') attackers = possible.filter(() => Math.random() > 0.45);
@@ -1803,6 +1821,7 @@ function aiCombat() {
     if (chosen) { blockersMap[atk.uid] = chosen.uid; chosen.blocking = true; }
   });
   resolveCombat(attackers, blockersMap, 'ai');
+  if (!state) return;  // Guard: game may have ended
   endTurn();
 }
 
@@ -1811,6 +1830,7 @@ function checkWin() {
   if (state.player.life <= 0) {
     SFX.lose();
     showModal('Defeat…', `AI reduced you to 0. Difficulty: ${state.difficulty}.`);
+    addXP(25);  // Participation XP even on loss
     state = null;
     stopMusic();
   } else if (state.ai.life <= 0) {
@@ -1842,7 +1862,10 @@ function showScreen(id) {
   if (id === 'modes-screen') renderModes();
   cancelTargeting();
   if (id !== 'game-screen') stopMusic();
-  if (id === 'menu-screen' && soundEnabled) titleJingle();
+  if (id === 'menu-screen') {
+    document.getElementById('menu-xp').textContent = `Level ${playerLevel} • XP ${playerXP}`;
+    if (soundEnabled) titleJingle();
+  }
 }
 function hideModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 function showModal(title, text) {
