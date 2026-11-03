@@ -1008,11 +1008,13 @@ function saveCollection() {
 function addXP(amount) {
   playerXP += amount;
   const newLevel = 1 + Math.floor(playerXP / 100);
+  let leveledUp = false;
   if (newLevel > playerLevel) {
     playerLevel = newLevel;
-    showModal('Level Up!', `You reached Level ${playerLevel}!`);
+    leveledUp = true;
   }
   saveCollection();
+  return leveledUp;
 }
 
 function getSavedDeck() {
@@ -1882,14 +1884,22 @@ function checkWin() {
   if (!state) return;
   if (state.player.life <= 0) {
     SFX.lose();
-    showModal('Defeat…', `AI reduced you to 0. Difficulty: ${state.difficulty}.`);
-    addXP(25);  // Participation XP even on loss
+    const leveledUp = addXP(25);  // Participation XP even on loss
+    if (leveledUp) {
+      showModal('Defeat…', `AI reduced you to 0. Difficulty: ${state.difficulty}.\n+ Leveled up to Level ${playerLevel}!`);
+    } else {
+      showModal('Defeat…', `AI reduced you to 0. Difficulty: ${state.difficulty}.`);
+    }
     state = null;
     stopMusic();
   } else if (state.ai.life <= 0) {
     SFX.win();
-    addXP(50);
-    showModal('Victory!', `You defeated the ${state.difficulty} AI Hunter!`);
+    const leveledUp = addXP(50);
+    if (leveledUp) {
+      showModal('Victory!', `You defeated the ${state.difficulty} AI Hunter!\n+ Leveled up to Level ${playerLevel}!`);
+    } else {
+      showModal('Victory!', `You defeated the ${state.difficulty} AI Hunter!`);
+    }
     state = null;
     stopMusic();
   }
@@ -2043,6 +2053,12 @@ ensureCollection();
 renderModes();
 // First user gesture unlocks audio
 document.body.addEventListener('click', () => ensureAudio(), { once: true });
+
+// Play title jingle on initial page load (menu is already visible)
+if (soundEnabled) {
+  ensureAudio();
+  titleJingle();
+}
 </script>
 </body>
 </html>
