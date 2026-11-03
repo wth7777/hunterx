@@ -219,8 +219,7 @@
     }
     #target-banner.visible { display: block; animation: slide-down 0.25s ease; }
     @keyframes slide-down { from { transform: translateY(-100%); } to { transform: translateY(0); } }
-    @keyframes tap-pulse { 0%,100% { opacity: 0.7; transform: translate(-50%,-50%) scale(1); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); } }
-    #target-banner button { margin-left: 10px; padding: 4px 12px; font-size: 12px; }
+     #target-banner button { margin-left: 10px; padding: 4px 12px; font-size: 12px; }
 
     .face-target { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: box-shadow 0.2s; }
     .face-target.targetable { background: rgba(120,53,15,0.45); box-shadow: 0 0 0 2px var(--rare); animation: target-pulse 0.9s ease-in-out infinite; }
@@ -450,7 +449,6 @@
     <div class="title-hero">
       <img class="title-hero-art" src="hxh-nen-battle/title-gon.jpg" onload="this.classList.add('loaded')" onerror="this.remove()" />
     </div>
-    <div id="tap-for-sound" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fbbf24;font-size:14px;font-weight:700;letter-spacing:2px;z-index:50;text-shadow:0 0 20px rgba(0,0,0,0.8);pointer-events:none;animation:tap-pulse 2s ease-in-out infinite;">TAP FOR SOUND</div>
     <div id="menu-xp" style="text-align:center;color:var(--muted);font-size:12px;margin:8px 0;"></div>
     <div style="text-align:center;margin:8px 0;">
       <button class="btn-secondary" onclick="exportProgress()" style="font-size:11px;padding:6px 10px;">Save Data</button>
@@ -641,6 +639,10 @@ function toggleSound() {
   if (soundEnabled) {
     ensureAudio();
     if (state && state.active === 'player') startMusic();
+    // If on menu screen, start/unmute title loop
+    if (!state && titleAudio) {
+      titleAudio.muted = false;
+    }
   } else {
     stopMusic();
   }
@@ -910,6 +912,7 @@ function sfxWithNen(name, card) {
 
 // ===== Title jingle (plays on menu / title screen) =====
 let titleJinglePlaying = false;
+
 function titleJingle() {
   if (!soundEnabled || titleJinglePlaying) return;
 
@@ -931,8 +934,6 @@ function titleJingle() {
     // unmute immediately. Otherwise wait for first gesture.
     if (audioCtx && audioCtx.state === 'running') {
       try { titleAudio.muted = false; } catch(e) {}
-      const tapEl = document.getElementById('tap-for-sound');
-      if (tapEl) tapEl.style.display = 'none';
     } else {
       // Muted autoplay succeeded — try to un-mute after a short delay so the
       // loop is already playing when audio becomes audible.
@@ -944,23 +945,17 @@ function titleJingle() {
     console.warn('Title audio autoplay blocked:', e);
     titleJinglePlaying = false;
   });
-
-  // Show tap-for-sound indicator while muted
-  const tapEl = document.getElementById('tap-for-sound');
-  if (tapEl) tapEl.style.display = 'block';
 }
 
 function unmuteTitleAudio() {
   if (titleAudio) {
     try { titleAudio.muted = false; } catch(e) {}
   }
-  const tapEl = document.getElementById('tap-for-sound');
-  if (tapEl) tapEl.style.display = 'none';
 }
 
 // Wire up first user gesture to unmute title audio + ensure AudioContext.
-// This fires once, on pointerdown/keydown/touchstart — the earliest gesture
-// browsers accept for unlocking audio context.
+// Fires once on pointerdown/keydown/touchstart — earliest gesture browsers
+// accept for unlocking audio context.
 function setupTitleAudioUnlock() {
   const unlock = () => {
     titleJinglePlaying = false;      // allow titleJingle() to re-run
@@ -970,8 +965,6 @@ function setupTitleAudioUnlock() {
     document.removeEventListener('pointerdown', unlock, true);
     document.removeEventListener('keydown', unlock, true);
     document.removeEventListener('touchstart', unlock, true);
-    // titleJinglePlaying stays true so the loop continues; on menu return,
-    // showScreen() calls titleJingle() again which respects the flag.
   };
   document.addEventListener('pointerdown', unlock, { once: true, passive: true });
   document.addEventListener('keydown', unlock, { once: true, passive: true });
@@ -2923,11 +2916,6 @@ loadCampaignProgress();
 ensureCampaignProgress();
 renderCampaignScreen();
 renderModes();
-// First user gesture unlocks audio
-document.body.addEventListener('click', () => {
-  ensureAudio();
-  titleJingle();
-}, { once: true });
 </script>
 <script src="hxh-nen-battle/test-suite.js"></script>
 </body>
