@@ -453,9 +453,9 @@
     <div id="tap-for-sound" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fbbf24;font-size:14px;font-weight:700;letter-spacing:2px;z-index:50;text-shadow:0 0 20px rgba(0,0,0,0.8);pointer-events:none;animation:tap-pulse 2s ease-in-out infinite;">TAP FOR SOUND</div>
     <div id="menu-xp" style="text-align:center;color:var(--muted);font-size:12px;margin:8px 0;"></div>
     <div style="text-align:center;margin:8px 0;">
-      <button class="btn-secondary" onclick="exportProgress()" style="font-size:11px;padding:6px 10px;">Export Progress</button>
+      <button class="btn-secondary" onclick="exportProgress()" style="font-size:11px;padding:6px 10px;">Save Data</button>
       <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importProgress(this.files[0])">
-      <button class="btn-secondary" onclick="document.getElementById('import-file').click()" style="font-size:11px;padding:6px 10px;">Import Progress</button>
+      <button class="btn-secondary" onclick="document.getElementById('import-file').click()" style="font-size:11px;padding:6px 10px;">Load Data</button>
     </div>
     <div class="menu-buttons">
       <button class="btn-primary" onclick="startGame('easy')">Quick Match — Easy</button>
@@ -1548,8 +1548,8 @@ function exportProgress() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('Progress exported.');
-  } catch(e) { console.error('exportProgress failed:', e); showToast('Export failed.'); }
+    showToast('Progress saved.');
+  } catch(e) { console.error('exportProgress failed:', e); showToast('Save failed.'); }
 }
 
 function importProgress(file) {
@@ -1568,12 +1568,12 @@ function importProgress(file) {
       unlockedCards = data.unlockedCards || [];
       if (data.deck) playerDeckList = data.deck;
       saveCollection();
-      showToast('Progress imported.');
+      showToast('Progress loaded.');
       renderCollection();
       renderDeckBuilder();
     };
     reader.readAsText(file);
-  } catch(e) { console.error('importProgress failed:', e); showToast('Import failed.'); }
+  } catch(e) { console.error('importProgress failed:', e); showToast('Load failed.'); }
 }
 function addXP(amount) {
   playerXP += amount;
