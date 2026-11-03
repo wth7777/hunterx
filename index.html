@@ -609,6 +609,7 @@ let musicVolume = 0.12;   // music relative to master (quieter than SFX)
 let musicActive = false;
 let musicOscillators = [];
 let musicGainNode = null;
+let titleAudio = null;      // HTML5 Audio element for title loop
 let lastPlayTime = {};    // key → timestamp, for debounce / voice limiting
 
 // Minimum gap (ms) between repeats of the same SFX to prevent spam
@@ -741,6 +742,12 @@ function stopMusic() {
     try { osc.stop(); osc.disconnect(); } catch(e) {}
   });
   musicOscillators = [];
+
+  // Stop title loop audio
+  if (titleAudio) {
+    try { titleAudio.pause(); titleAudio.currentTime = 0; } catch(e) {}
+    titleAudio = null;
+  }
 }
 
 // ===== SFX library: layered, impactful, Nen-themed =====
@@ -902,20 +909,24 @@ function sfxWithNen(name, card) {
 // ===== Title jingle (plays on menu / title screen) =====
 let titleJinglePlaying = false;
 function titleJingle() {
-  if (!soundEnabled || !audioCtx || titleJinglePlaying) return;
+  if (!soundEnabled || titleJinglePlaying) return;
+
+  // Stop any existing title audio first
+  if (titleAudio) {
+    try { titleAudio.pause(); titleAudio.currentTime = 0; } catch(e) {}
+    titleAudio = null;
+  }
+
   titleJinglePlaying = true;
-  const t = audioCtx.currentTime;
-  const melody = [
-    { f: 330, d: 0.18 }, { f: 415, d: 0.18 }, { f: 495, d: 0.18 }, { f: 554, d: 0.2 },
-    { f: 659, d: 0.22 }, { f: 554, d: 0.12 }, { f: 659, d: 0.22 }, { f: 830, d: 0.35 },
-  ];
-  melody.forEach((note, i) => {
-    playNote({ freq: note.f, dur: note.d, type: 'triangle', vol: 0.09, when: t + i * 0.15 });
+
+  titleAudio = new Audio('hxh-nen-battle/title-loop.wav');
+  titleAudio.loop = true;
+  titleAudio.volume = masterVolume * musicVolume;
+  titleAudio.play().catch(e => {
+    console.warn('Title audio play blocked (awaiting user gesture):', e);
+    titleJinglePlaying = false;
   });
-  playNote({ freq: 110, dur: 0.5, type: 'sawtooth', vol: 0.06, when: t + 1.0 });
-  playNoise({ dur: 0.15, vol: 0.04, when: t + 1.0 });
-  setTimeout(() => { titleJinglePlaying = false; }, 1600);
-};
+}
 
 // ==================== CARD DATABASE ====================
 // Rarity: common, uncommon, rare, epic, legendary
@@ -1972,6 +1983,12 @@ function aiDeckForDifficulty(diff) {
 
 function startGame(diff) {
   ensureAudio();
+  // Stop title loop audio when starting a game
+  if (titleAudio) {
+    try { titleAudio.pause(); titleAudio.currentTime = 0; } catch(e) {}
+    titleAudio = null;
+  }
+  titleJinglePlaying = false;
   lastDifficulty = diff;
   let pList = getSavedDeck();
   if (!pList || pList.length < 30) { loadDefaultDeck(); pList = playerDeckList; }
