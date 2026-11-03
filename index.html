@@ -2346,8 +2346,23 @@ function showCardInspect(card, col) {
 function unlockCard(id) {
   const c = cardById(id);
   if (!c) return;
-  // Cost to unlock based on rarity
-  const cost = { common: 20, uncommon: 50, rare: 100, epic: 200, legendary: 400 }[c.rarity] || 50;
+  // Cost to unlock based on rarity and card
+  const customCosts = {
+    // New expansion cards - custom XP costs
+    'ko': 25,        // Common technique
+    'gyo': 25,       // Common technique
+    'nobunaga': 50,  // Uncommon character
+    'machi': 50,     // Uncommon character
+    'ken': 50,       // Uncommon technique
+    'phinks': 75,    // Rare character
+    'biscuit': 75,   // Rare character
+    'pakunoda': 75,  // Rare character
+    'morel': 75,     // Rare character
+    'snake-awakens': 75, // Rare technique
+    'feitan': 100,   // Epic character
+    'franklin': 100, // Epic character
+  };
+  const cost = customCosts[id] || { common: 20, uncommon: 50, rare: 100, epic: 200, legendary: 400 }[c.rarity] || 50;
   if (playerXP >= cost) {
     playerXP -= cost;
     if (!collection[id]) collection[id] = { owned: false, xp: 0, level: 1, copies: 0 };
