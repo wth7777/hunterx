@@ -1350,7 +1350,24 @@ function buildDeckFromList(list) {
 function aiDeckForDifficulty(diff) {
   let ids = [];
   if (diff === 'easy') {
-    ids = ['gon','gon','killua','leorio','ten','ten','ren','heal','heal','killua-lightning','zetsu','gon-jajanken','kurapika','hisoka','emission-blast','dowsing','dowsing','bungee','control','shalnark','illumi','kite','razor','uvogin','chrollo','meruem','neferpitou','netero','silva','shizuku','judgment','emperor-time','gon','killua','leorio','ten'];
+    // Weak starter deck: max cost 3, no legendaries/epics, lots of commons
+    ids = [
+      'gon','gon','gon','gon','gon','gon',      // 6× cost 2
+      'killua','killua','killua',               // 3× cost 3
+      'leorio','leorio','leorio',               // 3× cost 2
+      'kurapika','kurapika',                    // 2× cost 3
+      'ten','ten','ten','ten',                  // 4× cost 1
+      'ren','ren','ren',                        // 3× cost 2
+      'heal','heal','heal',                     // 3× cost 2
+      'killua-lightning','killua-lightning',    // 2× cost 2
+      'zetsu','zetsu','zetsu',                  // 3× cost 1
+      'dowsing','dowsing','dowsing',            // 3× cost 1
+      'bungee','bungee',                        // 2× cost 2
+      'counter','counter',                      // 2× cost 2
+      'emission-blast','emission-blast',        // 2× cost 3
+      'shalnark',                               // 1× cost 3
+      'shizuku',                                // 1× cost 3
+    ];
   } else if (diff === 'medium') {
     ids = ['killua','killua','hisoka','kurapika','chrollo','uvogin','netero','razor','illumi','neferpitou','meruem','gon','kite','shalnark','silva','shizuku','leorio','gon-jajanken','killua-lightning','emission-blast','judgment','control','emperor-time','ren','ren','ten','zetsu','heal','bungee','dowsing','dowsing','counter','hisoka','kurapika','chrollo'];
   } else {
@@ -1782,14 +1799,28 @@ async function aiPlayCards() {
   if (!state) return;  // Guard: game may have ended
   let guard = 12;
   while (guard-- > 0) {
-    const affordable = state.ai.hand
-      .filter(c => c.cost <= state.ai.aura)
-      .sort((a,b) => {
+    const affordable = state.ai.hand.filter(c => c.cost <= state.ai.aura);
+    if (!affordable.length) break;
+
+    let card;
+    if (state.difficulty === 'easy') {
+      // Easy AI: 30% chance to pass turn even when cards are playable
+      if (Math.random() < 0.30) break;
+      // Easy AI: mostly plays cheapest card, sometimes picks randomly
+      if (Math.random() < 0.60) {
+        affordable.sort((a, b) => a.cost - b.cost);
+        card = affordable[0];
+      } else {
+        card = affordable[Math.floor(Math.random() * affordable.length)];
+      }
+    } else {
+      affordable.sort((a, b) => {
         if (a.type !== b.type) return a.type === 'character' ? -1 : 1;
         return b.cost - a.cost;
       });
-    if (!affordable.length) break;
-    const card = affordable[0];
+      card = affordable[0];
+    }
+
     state.ai.aura -= card.cost;
     state.ai.hand = state.ai.hand.filter(c => c.uid !== card.uid);
     log(`AI plays ${card.name}.`);
@@ -1858,7 +1889,7 @@ function aiCombat() {
   if (!state) return;  // Guard: game may have ended
   const possible = state.ai.board.filter(b => !b.tapped && !b.summoningSickness);
   let attackers = [];
-  if (state.difficulty === 'easy') attackers = possible.filter(() => Math.random() > 0.45);
+  if (state.difficulty === 'easy') attackers = possible.filter(() => Math.random() > 0.60);
   else if (state.difficulty === 'medium') attackers = possible.filter(b => b.power >= 2 || possible.length <= 2);
   else attackers = possible;
   attackers.forEach(a => a.attacking = true);
