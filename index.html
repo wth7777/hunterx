@@ -1031,6 +1031,242 @@ const CARD_DB = [
     text:'Target character gets +2/+0 until end of turn.', art:'🐍', needsTarget:true, targetMode:'friendly', buffP:2 },
 ];
 
+// ==================== CARD EFFECT REGISTRY ====================
+// Data-driven effect definitions for every card ability.
+// Each effect: { cardId, trigger, source, duration, apply }
+// Triggers: 'enter', 'attack', 'block', 'damage', 'destroy', 'turnStart', 'turnEnd', 'synergy', 'resolve'
+// Durations: 'once', 'endTurn', 'permanent', 'untilRemoved'
+// Source prevents duplicate stacking of the same effect.
+
+const CARD_EFFECTS = [
+  // === Character enter effects ===
+  { cardId:'gon', trigger:'enter', source:'gon-life', duration:'once',
+    apply:(g, inst, owner, target) => { const me = owner==='player'?g.player:g.ai; me.life=Math.min(30,me.life+1); g.log('+1 life (Gon).'); } },
+  
+  { cardId:'kurapika', trigger:'enter', source:'kurapika-tap', duration:'once',
+    apply:(g, inst, owner, target) => { if(target && target.id!=='weapon-token'){ target.tapped=true; target.skipUntap=true; g.log('Kurapika Chain Jail: target tapped.'); } } },
+  
+  { cardId:'leorio', trigger:'enter', source:'leorio-punch', duration:'once',
+    apply:(g, inst, owner, target) => { if(target){ target.toughness-=1; g.log('Leorio Remote Punch: 1 damage.'); } } },
+  
+  { cardId:'razor', trigger:'enter', source:'razor-damage', duration:'once',
+    apply:(g, inst, owner, target) => { if(target){ target.toughness-=2; g.log('Razor: 2 damage.'); } } },
+  
+  { cardId:'franklin', trigger:'enter', source:'franklin-blast', duration:'once',
+    apply:(g, inst, owner, target) => { if(target){ target.toughness-=3; g.log('Franklin: 3 damage.'); } } },
+  
+  { cardId:'illumi', trigger:'enter', source:'illumi-discard', duration:'once',
+    apply:(g, inst, owner) => { const opp = owner==='player'?g.ai:g.player; if(opp.hand.length){ opp.hand.pop(); g.log('Illumi: opponent discards.'); } } },
+  
+  { cardId:'machi', trigger:'enter', source:'machi-tap', duration:'once',
+    apply:(g, inst, owner, target) => { if(target && target.id!=='weapon-token'){ target.tapped=true; target.skipUntap=true; g.log('Machi: target tapped.'); } } },
+  
+  { cardId:'morel', trigger:'enter', source:'morel-tap', duration:'once',
+    apply:(g, inst, owner, target) => { if(target && target.id!=='weapon-token'){ target.tapped=true; target.skipUntap=true; g.log('Morel: target tapped.'); } } },
+  
+  { cardId:'meruem', trigger:'enter', source:'meruem-enter', duration:'once',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; me.life=Math.min(30,me.life+3); g.drawCard(me); g.log('Meruem: +3 life & draw.'); } },
+  
+  { cardId:'neferpitou', trigger:'enter', source:'pitou-aura', duration:'untilRemoved',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; me.board.forEach(b=>{ if(b.id!=='neferpitou'){ b.power++; b.toughness++; b.tempBuffs=b.tempBuffs||[]; if(!b.tempBuffs.some(x=>x.source==='pitou-aura')){ b.tempBuffs.push({p:1,t:1,source:'pitou-aura',duration:'untilRemoved'}); } } }); g.log('Terpsichora: board +1/+1.'); } },
+  
+  { cardId:'kite', trigger:'enter', source:'kite-weapon', duration:'once',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; me.board.push(makeInstance(g.cardById('weapon-token'))); g.log('Kite creates 2/2 weapon.'); } },
+  
+  { cardId:'pakunoda', trigger:'enter', source:'pakunoda-info', duration:'once',
+    apply:(g, inst, owner) => { const opp = owner==='player'?g.ai:g.player; g.log(`Pakunoda: opponent has ${opp.hand.length} cards in hand.`); } },
+  
+  { cardId:'biscuit', trigger:'enter', source:'biscuit-buff', duration:'once',
+    apply:(g, inst, owner, target) => { if(target && target.id!=='weapon-token'){ target.power+=2; target.toughness+=2; target.tempBuffs=target.tempBuffs||[]; target.tempBuffs.push({p:2,t:2,source:'biscuit-buff',duration:'endTurn'}); g.log('Biscuit: target +2/+2 until end of turn.'); } } },
+  
+  { cardId:'feitan', trigger:'damage', source:'feitan-pain', duration:'once',
+    apply:(g, inst, owner, target, ctx) => {
+      if(ctx && ctx.damageToPlayer && g[owner==='player'?'ai':'player'].board.length) {
+        const opp = owner==='player'?g.ai:g.player;
+        const t = opp.board[0];
+        t.toughness-=2; g.log(`Feitan Pain Packer: 2 damage to ${g.cardById(t.id).name}.`);
+      }
+    } },
+  
+  { cardId:'shizuku', trigger:'damage', source:'shizuku-discard', duration:'once',
+    apply:(g, inst, owner, target, ctx) => {
+      if(ctx && ctx.damageToPlayer) {
+        const opp = owner==='player'?g.ai:g.player;
+        if(opp.hand.length){ opp.hand.pop(); g.log('Blinky discards.'); }
+      }
+    } },
+  
+  { cardId:'silva', trigger:'attack', source:'silva-attack', duration:'once',
+    apply:(g, inst, owner, target, ctx) => {
+      if(ctx && ctx.unblocked) { ctx.extraDamage = (ctx.extraDamage||0) + 1; g.log('Silva: +1 damage unblocked.'); } } },
+  
+  { cardId:'uvogin', trigger:'attack', source:'uvogin-attack', duration:'endTurn',
+    apply:(g, inst, owner, target, ctx) => { inst.power+=2; inst.tempBuffs=inst.tempBuffs||[]; inst.tempBuffs.push({p:2,t:0,source:'uvogin-attack',duration:'endTurn'}); g.log('Uvogin: +2 power until end of turn.'); } },
+  
+  { cardId:'phinks', trigger:'attack', source:'phinks-attack', duration:'endTurn',
+    apply:(g, inst, owner, target, ctx) => { inst.power+=2; inst.tempBuffs=inst.tempBuffs||[]; inst.tempBuffs.push({p:2,t:0,source:'phinks-attack',duration:'endTurn'}); g.log('Phinks: +2 power until end of turn.'); } },
+  
+  { cardId:'netero', trigger:'attack', source:'netero-attack', duration:'once',
+    apply:(g, inst, owner, target, ctx) => { if(ctx && ctx.target){ ctx.target.toughness-=2; g.log('Netero: 2 damage to target.'); } } },
+  
+  { cardId:'hisoka', trigger:'block', source:'hisoka-block', duration:'once',
+    apply:(g, inst, owner, target, ctx) => {
+      if(ctx && ctx.other){ ctx.other.toughness-=1; g.log('Hisoka: Bungee Gum 1 extra damage.'); } } },
+  
+  // === Technique resolve effects ===
+  { cardId:'ten', trigger:'resolve', source:'ten-shield', duration:'endTurn',
+    apply:(g, inst, owner, target) => { if(target && target.id!=='weapon-token'){ target.toughness+=3; target.tempBuffs=target.tempBuffs||[]; target.tempBuffs.push({p:0,t:3,source:'ten-shield',duration:'endTurn'}); g.log('Ten: target +0/+3 until end of turn.'); } } },
+  
+  { cardId:'ren', trigger:'resolve', source:'ren-surge', duration:'endTurn',
+    apply:(g, inst, owner, target) => { if(target && target.id!=='weapon-token'){ target.power+=2; target.toughness+=2; target.tempBuffs=target.tempBuffs||[]; target.tempBuffs.push({p:2,t:2,source:'ren-surge',duration:'endTurn'}); g.log('Ren: target +2/+2 until end of turn.'); } } },
+  
+  { cardId:'heal', trigger:'resolve', source:'heal-life', duration:'once',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; me.life=Math.min(30,me.life+4); g.log('+4 life.'); } },
+  
+  { cardId:'counter', trigger:'resolve', source:'counter-life', duration:'once',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; me.life=Math.min(30,me.life+2); me.tempStatus=me.tempStatus||{}; me.tempStatus.counter=2; g.log('+2 life. Counter active (2).'); } },
+  
+  { cardId:'emperor-time', trigger:'resolve', source:'emperor-time', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; me.board.forEach(b=>{ b.power++; b.toughness++; b.tempBuffs=b.tempBuffs||[]; if(!b.tempBuffs.some(x=>x.source==='emperor-time')){ b.tempBuffs.push({p:1,t:1,source:'emperor-time',duration:'endTurn'}); } }); g.log('Emperor Time: all characters +1/+1 until end of turn.'); } },
+  
+  { cardId:'bungee', trigger:'resolve', source:'bungee-return', duration:'once',
+    apply:(g, inst, owner, target) => { if(target){ const opp = owner==='player'?g.ai:g.player; const idx = opp.board.findIndex(b=>b.uid===target.uid); if(idx>=0){ const t = opp.board.splice(idx,1)[0]; opp.hand.push({...g.cardById(t.id),uid:uid()}); g.log(`Returned ${g.cardById(t.id).name} to hand.`); } } } },
+  
+  { cardId:'zetsu', trigger:'resolve', source:'zetsu-vanish', duration:'endTurn',
+    apply:(g, inst, owner, target) => { if(target){ target.tempStatus=target.tempStatus||{}; target.tempStatus.cantBlock='endTurn'; g.log('Zetsu: target can\'t be blocked this turn.'); } } },
+  
+  { cardId:'killua-lightning', trigger:'resolve', source:'killua-lightning', duration:'once',
+    apply:(g, inst, owner, target) => { if(target){ target.toughness-=2; target.tempStatus=target.tempStatus||{}; target.tempStatus.cantBlock='endTurn'; g.log('Killua Lightning: 2 damage, can\'t block this turn.'); } } },
+  
+  { cardId:'emission-blast', trigger:'resolve', source:'emission-blast', duration:'once',
+    apply:(g, inst, owner, target) => { if(target){ if(target.id==='face'){ const opp = owner==='player'?g.ai:g.player; opp.life-=3; g.log('Emission Blast: 3 damage to player.'); } else { target.toughness-=3; g.log('Emission Blast: 3 damage to target.'); } } } },
+  
+  { cardId:'judgment', trigger:'resolve', source:'judgment', duration:'once',
+    apply:(g, inst, owner, target) => { if(target && target.power>=4){ target.toughness=0; g.log('Judgment: target destroyed.'); } } },
+  
+  { cardId:'dowsing', trigger:'resolve', source:'dowsing', duration:'once',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; if(me.deck.length){ const top = me.deck.splice(0,Math.min(3,me.deck.length)); if(me===g.player){ g.dowsingSelection={cards:top}; g.showCardSelection(top,(idx)=>g.resolveDowsingSelection(idx)); return; } else { const bestIdx = top.findIndex(c=>c.type==='character'); const pickIdx = bestIdx>=0?bestIdx:0; me.hand.push(top[pickIdx]); me.deck.push(...top.slice(0,pickIdx),...top.slice(pickIdx+1)); g.log(`AI Dowsing: took ${g.cardById(top[pickIdx]).name}.`); } } } },
+  
+  { cardId:'snake-awakens', trigger:'resolve', source:'snake-awakens', duration:'endTurn',
+    apply:(g, inst, owner, target) => { if(target && target.id!=='weapon-token'){ target.power+=2; target.tempBuffs=target.tempBuffs||[]; target.tempBuffs.push({p:2,t:0,source:'snake-awakens',duration:'endTurn'}); g.log('Snake Awakens: target +2/+0 until end of turn.'); } } },
+  
+  { cardId:'ko', trigger:'resolve', source:'ko-focus', duration:'endTurn',
+    apply:(g, inst, owner, target) => { if(target && target.id!=='weapon-token'){ target.power+=3; target.tempBuffs=target.tempBuffs||[]; target.tempBuffs.push({p:3,t:0,source:'ko-focus',duration:'endTurn'}); g.log('Ko: target +3/+0 until end of turn.'); } } },
+  
+  { cardId:'ken', trigger:'resolve', source:'ken-guard', duration:'endTurn',
+    apply:(g, inst, owner, target) => { if(target && target.id!=='weapon-token'){ target.toughness+=3; target.tempBuffs=target.tempBuffs||[]; target.tempBuffs.push({p:0,t:3,source:'ken-guard',duration:'endTurn'}); g.log('Ken: target +0/+3 until end of turn.'); } } },
+  
+  { cardId:'gyo', trigger:'resolve', source:'gyo-focus', duration:'once',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; if(me.deck.length){ const top = me.deck[0]; g.log(`Gyo: top card is ${g.cardById(top).name}.`); } } },
+  
+  { cardId:'gon-jajanken', trigger:'resolve', source:'gon-jajanken', duration:'once',
+    apply:(g, inst, owner, target) => { if(target){ if(target.id==='face'){ const opp = owner==='player'?g.ai:g.player; opp.life-=3; g.log('Jajanken: 3 damage to player.'); } else { target.toughness-=4; g.log('Jajanken: 4 damage to target.'); } } } },
+  
+  // === Synergy effects ===
+  { cardId:'gon', trigger:'synergy', source:'gonKillua', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; if(me.board.some(b=>b.id==='killua')){ inst.power++; inst.toughness++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='gonKillua')){ inst.tempBuffs.push({p:1,t:1,source:'gonKillua',duration:'endTurn'}); g.log('Gon & Killua synergy: +1/+1.'); } } } },
+  
+  { cardId:'killua', trigger:'synergy', source:'gonKillua', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; if(me.board.some(b=>b.id==='gon')){ inst.power++; inst.toughness++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='gonKillua')){ inst.tempBuffs.push({p:1,t:1,source:'gonKillua',duration:'endTurn'}); g.log('Gon & Killua synergy: +1/+1.'); } } } },
+  
+  { cardId:'chrollo', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+  
+  { cardId:'illumi', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+  
+  { cardId:'shalnark', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+  
+  { cardId:'shizuku', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+  
+  { cardId:'phinks', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+  
+  { cardId:'franklin', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+  
+  { cardId:'feitan', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+  
+  { cardId:'machi', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+  
+  { cardId:'nobunaga', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+  
+  { cardId:'pakunoda', trigger:'synergy', source:'troupe', duration:'endTurn',
+    apply:(g, inst, owner) => { const me = owner==='player'?g.player:g.ai; const troupeIds=['chrollo','illumi','shalnark','shizuku','phinks','franklin','feitan','machi','nobunaga','pakunoda']; if(me.board.filter(b=>troupeIds.includes(b.id)).length>=2){ inst.power++; inst.tempBuffs=inst.tempBuffs||[]; if(!inst.tempBuffs.some(x=>x.source==='troupe')){ inst.tempBuffs.push({p:1,t:0,source:'troupe',duration:'endTurn'}); g.log('Phantom Troupe synergy: +1 power.'); } } } },
+];
+
+// Global effect instances (board-wide auras that need cleanup)
+let globalEffects = [];
+
+// Dispatch an effect trigger to all matching registered effects
+function dispatchEffect(trigger, context) {
+  const { gameState, sourceCardId, sourceInst, owner, target, extra } = context;
+  const matches = CARD_EFFECTS.filter(e => e.trigger === trigger && (!sourceCardId || e.cardId === sourceCardId));
+  matches.forEach(effect => {
+    try { effect.apply(gameState, sourceInst, owner, target, extra); } catch(err) { console.error('Effect error:', effect.cardId, effect.trigger, err); }
+  });
+}
+
+// Apply all 'enter' effects when a character enters play
+function applyEnterEffects(card, inst, owner) {
+  dispatchEffect('enter', { gameState:state, sourceCardId:card.id, sourceInst:inst, owner, target:null, extra:null });
+}
+
+// Apply all 'resolve' effects when a technique resolves
+function resolveCardEffect(card, inst, owner, target) {
+  dispatchEffect('resolve', { gameState:state, sourceCardId:card.id, sourceInst:inst, owner, target, extra:null });
+}
+
+// Apply attack/block/damage triggers during combat
+function dispatchCombatEffect(trigger, atkInst, defInst, context) {
+  dispatchEffect(trigger, { gameState:state, sourceCardId:atkInst.id, sourceInst:atkInst, owner:context.attackingSide, target:defInst, extra:context });
+}
+
+// Expire end-turn effects from all cards on a side
+function expireTurnEffects(side) {
+  const who = state[side];
+  who.board.forEach(b => {
+    if (b.tempBuffs) {
+      b.tempBuffs = b.tempBuffs.filter(buf => {
+        if (buf.duration === 'endTurn') {
+          b.power -= buf.p || 0;
+          b.toughness -= buf.t || 0;
+          return false;
+        }
+        return true;
+      });
+    }
+    if (b.tempStatus) {
+      if (b.tempStatus.unblockable === 'endTurn') delete b.tempStatus.unblockable;
+      if (b.tempStatus.cantBlock === 'endTurn') delete b.tempStatus.cantBlock;
+    }
+  });
+}
+
+// Remove 'untilRemoved' effects when source leaves play
+function removeSourceEffects(sourceId) {
+  ['player','ai'].forEach(side => {
+    const who = state[side];
+    who.board.forEach(b => {
+      if (b.tempBuffs) {
+        b.tempBuffs = b.tempBuffs.filter(buf => {
+          if (buf.source === sourceId && buf.duration === 'untilRemoved') {
+            b.power -= buf.p || 0;
+            b.toughness -= buf.t || 0;
+            return false;
+          }
+          return true;
+        });
+      }
+    });
+  });
+}
+
 // ==================== CAMPAIGN CHAPTERS ====================
 // Chapter progression data for the Story Campaign mode
 // Each chapter defines: id, title, subtitle, description, diff, requiredLevel,
@@ -1812,69 +2048,16 @@ function drawCard(who) {
 }
 
 function applyTempEffects() {
-  // Apply permanent aura buffs (e.g. Neferpitou) and expire temp buffs
+  // Expire end-turn buffs on both sides
+  ['player','ai'].forEach(side => expireTurnEffects(side));
+  
+  // Dispatch synergy effects for each card on board
   ['player','ai'].forEach(side => {
     const who = state[side];
-    // Neferpitou aura
-    const hasPitou = who.board.some(b => b.id === 'neferpitou');
-    if (hasPitou) {
-      who.board.forEach(b => { if (b.id !== 'neferpitou') { b.power++; b.toughness++; } });
-    }
-    // Expire end-turn buffs
     who.board.forEach(b => {
-      if (b.tempBuffs) {
-        b.tempBuffs = b.tempBuffs.filter(buf => {
-          if (buf.expire === 'endTurn') {
-            b.power -= buf.p;
-            b.toughness -= buf.t;
-            return false;
-          }
-          return true;
-        });
-      }
-      if (b.tempStatus) {
-        if (b.tempStatus.unblockable === 'endTurn') delete b.tempStatus.unblockable;
-      }
+      dispatchEffect('synergy', { gameState:state, sourceCardId:b.id, sourceInst:b, owner:side, target:null, extra:null });
     });
-    // Synergy effects
-    applySynergyEffects(who);
   });
-}
-
-function applySynergyEffects(who) {
-  // Gon + Killua synergy: both get +1/+1 when on board together
-  const hasGon = who.board.some(b => b.id === 'gon');
-  const hasKillua = who.board.some(b => b.id === 'killua');
-  if (hasGon && hasKillua) {
-    who.board.forEach(b => {
-      if (b.id === 'gon' || b.id === 'killua') {
-        b.tempBuffs = b.tempBuffs || [];
-        const hasBuff = b.tempBuffs.some(buf => buf.source === 'gonKillua');
-        if (!hasBuff) {
-          b.tempBuffs.push({p:1, t:1, expire:'endTurn', source:'gonKillua'});
-          b.power++; b.toughness++;
-          log(`Gon & Killua synergy: ${cardById(b.id).name} gets +1/+1.`);
-        }
-      }
-    });
-  }
-
-  // Phantom Troupe synergy: 2+ Troupe members → all Troupe members get +1 power
-  const troupeIds = ['chrollo', 'illumi', 'shalnark', 'shizuku', 'phinks', 'franklin', 'feitan', 'machi', 'nobunaga', 'pakunoda'];
-  const troupeCount = who.board.filter(b => troupeIds.includes(b.id)).length;
-  if (troupeCount >= 2) {
-    who.board.forEach(b => {
-      if (troupeIds.includes(b.id)) {
-        b.tempBuffs = b.tempBuffs || [];
-        const hasBuff = b.tempBuffs.some(buf => buf.source === 'troupe');
-        if (!hasBuff) {
-          b.tempBuffs.push({p:1, t:0, expire:'endTurn', source:'troupe'});
-          b.power++;
-          log(`Phantom Troupe synergy: ${cardById(b.id).name} gets +1 power.`);
-        }
-      }
-    });
-  }
 }
 
 function updateUI() {
@@ -2004,86 +2187,40 @@ function makeInstance(card) {
 }
 
 function applyEnterEffects(card, inst, owner) {
-  const me = owner === 'player' ? state.player : state.ai;
-  const opp = owner === 'player' ? state.ai : state.player;
-  if (card.id === 'gon') { me.life = Math.min(30, me.life + 1); log('+1 life (Gon).'); SFX.heal(); }
-  if (card.id === 'kite') {
-    ensureToken();
-    me.board.push(makeInstance(cardById('weapon-token')));
-    log('Kite creates 2/2 weapon.');
-    SFX.summon();
-  }
-  if (card.id === 'illumi' && opp.hand.length) {
-    opp.hand.pop();
-    log('Illumi: opponent discards.');
-  }
-  if (card.id === 'meruem') {
-    me.life = Math.min(30, me.life + 3);
-    drawCard(me);
-    log('Meruem: +3 life & draw.');
-    SFX.heal(); SFX.legendary();
-  }
-  if (card.id === 'neferpitou') {
-    me.board.forEach(b => { if (b.id !== 'neferpitou') { b.power++; b.toughness++; } });
-    log('Terpsichora: board +1/+1.');
-  }
-  if (card.id === 'leorio' && opp.board.length) {
-    const t = opp.board[0];
-    t.toughness -= 1;
-    log('Leorio Remote Punch: 1 damage.');
-    flashCard(t.uid); SFX.damage();
-  }
-  if (card.id === 'razor') {
-    const t = opp.board[0];
-    if (t) { t.toughness -= 2; log('Razor: 2 damage.'); flashCard(t.uid); SFX.damage(); }
-  }
-  if (card.id === 'kurapika' && opp.board.length) {
-    const t = opp.board[0];
-    t.tapped = true; t.skipUntap = true;
-    log('Kurapika Chain Jail: tapped.');
-  }
-  if (card.id === 'pakunoda' && opp.hand.length) {
-    const handSize = opp.hand.length;
-    log(`Pakunoda Memory Bomb: opponent has ${handSize} cards in hand.`);
-  }
+  // Dispatch data-driven enter effects via the central effect system
+  dispatchEffect('enter', { gameState:state, sourceCardId:card.id, sourceInst:inst, owner, target:null, extra:null });
+  
+  // Sound effects for enter triggers
+  if (card.id === 'gon' || card.id === 'meruem') SFX.heal();
+  if (card.id === 'meruem') SFX.legendary();
+  if (card.id === 'kite') SFX.summon();
 }
 
 function resolveUntargeted(card, owner) {
-  const me = owner === 'player' ? state.player : state.ai;
-  if (card.id === 'heal') { me.life = Math.min(30, me.life + 4); log('+4 life.'); SFX.heal(); }
-  if (card.id === 'counter') {
-    me.life = Math.min(30, me.life + 2);
-    me.tempStatus = me.tempStatus || {};
-    me.tempStatus.counter = 2;
-    log('+2 life. Counter active (2).');
-    SFX.heal(); SFX.counter();
-  }
-  if (card.id === 'emperor-time') {
-    me.board.forEach(b => { b.power++; b.toughness++; b.tempBuffs = b.tempBuffs || []; b.tempBuffs.push({p:1,t:1,expire:'endTurn'}); });
-    log('Emperor Time: +1/+1 until end of turn.');
-  }
-  if (card.id === 'dowsing' && me.deck.length) {
-    const top = me.deck.splice(0, Math.min(3, me.deck.length));
-    if (me === state.player) {
-      // Player: show card selection UI
-      dowsingSelection = { cards: top };
-      showCardSelection(top, (selectedIdx) => resolveDowsingSelection(selectedIdx));
-      return;
-    } else {
-      // AI: auto-pick - prefer character cards, otherwise first card
-      const bestIdx = top.findIndex(c => c.type === 'character');
-      const pickIdx = bestIdx >= 0 ? bestIdx : 0;
-      me.hand.push(top[pickIdx]);
-      me.deck.push(...top.slice(0, pickIdx), ...top.slice(pickIdx + 1));
-      log(`AI Dowsing: took ${cardById(top[pickIdx]).name}.`);
+    // Dispatch data-driven resolve effects via the central effect system
+    const me = owner === 'player' ? state.player : state.ai;
+    const opp = owner === 'player' ? state.ai : state.player;
+
+    // Special handling for dowsing (player card selection UI)
+    if (card.id === 'dowsing' && me.deck.length) {
+      const top = me.deck.splice(0, Math.min(3, me.deck.length));
+      if (me === state.player) {
+        dowsingSelection = { cards: top };
+        showCardSelection(top, (selectedIdx) => resolveDowsingSelection(selectedIdx));
+        return;
+      } else {
+        // AI auto-pick handled by CARD_EFFECTS resolve handler
+        resolveCardEffect(card, null, owner, null);
+        return;
+      }
     }
+
+    resolveCardEffect(card, null, owner, null);
+
+    // Sound effects for technique resolves
+    if (card.id === 'heal' || card.id === 'counter') SFX.heal();
+    if (card.id === 'counter') SFX.counter();
   }
-  if (card.id === 'bungee' && opp.board.length) {
-    const t = opp.board.pop();
-    opp.hand.push({ ...cardById(t.id), uid: uid() });
-    log(`Returned ${cardById(t.id).name} to hand.`);
-  }
-}
 
 function cleanupDead() {
   ['player','ai'].forEach(side => {
@@ -2139,41 +2276,34 @@ function resolveCombat(attackers, blockersMap, attackingSide) {
   const defP = attackingSide === 'player' ? state.ai : state.player;
   attackers.forEach(atk => {
     const blUid = blockersMap[atk.uid];
+    const ctx = { attackingSide, extraDamage: 0, unblocked: false, damageToPlayer: false, target: null };
+    // Dispatch 'attack' trigger (e.g. Uvogin/Phinks +power, Silva +1 unblocked)
+    dispatchCombatEffect('attack', atk, null, ctx);
     if (blUid) {
       const bl = defP.board.find(b => b.uid === blUid);
       if (bl) {
+        dispatchCombatEffect('block', atk, bl, { ...ctx, other: bl });
         bl.toughness -= atk.power;
         atk.toughness -= bl.power;
         log(`${cardById(atk.id).name} fights ${cardById(bl.id).name}.`);
         SFX.block();
-        if (atk.id === 'hisoka') bl.toughness -= 1;
-        if (bl.id === 'hisoka') atk.toughness -= 1;
         flashCard(atk.uid); flashCard(bl.uid);
       }
     } else {
-      let dmg = atk.power;
-      if (atk.id === 'silva') dmg += 1;
-      if (atk.id === 'uvogin') dmg += 2;
-      if (atk.id === 'phinks') dmg += 2;
-      // Counter reduction
+      ctx.unblocked = true;
+      ctx.damageToPlayer = true;
+      let dmg = atk.power + ctx.extraDamage;
       if (defP.tempStatus && defP.tempStatus.counter) {
         dmg = Math.max(0, dmg - defP.tempStatus.counter);
         defP.tempStatus.counter--;
         if (defP.tempStatus.counter <= 0) delete defP.tempStatus.counter;
-        log('Counter reduced damage!');
-        SFX.counter();
+        log('Counter reduced damage!'); SFX.counter();
       }
       defP.life -= dmg;
       log(`${cardById(atk.id).name} deals ${dmg} to ${attackingSide === 'player' ? 'AI' : 'you'}.`);
       SFX.damage();
       flashFace(attackingSide === 'player' ? 'ai' : 'player');
-      if (atk.id === 'shizuku' && defP.hand.length) { defP.hand.pop(); log('Blinky discards.'); }
-      if (atk.id === 'feitan' && defP.board.length) {
-        const t = defP.board[0];
-        t.toughness -= 2;
-        log(`Feitan Pain Packer: deals 2 damage to ${cardById(t.id).name}.`);
-        flashCard(t.uid); SFX.damage();
-      }
+      dispatchCombatEffect('damage', atk, null, { ...ctx, damageToPlayer: true });
     }
     atk.attacking = false;
     atk.tapped = true;
@@ -2182,7 +2312,7 @@ function resolveCombat(attackers, blockersMap, attackingSide) {
   cleanupDead();
   updateUI();
   checkWin();
-  if (!state) return;  // Guard: checkWin may have set state = null (game over)
+  if (!state) return;
 }
 
 function endTurn() {
