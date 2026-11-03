@@ -256,9 +256,9 @@
     /* Collection / Gallery */
     .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding: 6px; max-height: 78vh; overflow-y: auto; }
     .deck-list-view { background: var(--panel); border-radius: 12px; padding: 14px; border: 1px solid #243044; height: 100%; min-height: 0; overflow-y: auto; }
-    .deck-builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 12px; height: calc(100dvh - 130px); max-height: calc(100dvh - 130px); overflow: hidden; align-items: stretch; }
-    .card-pool { display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; }
-    #pool-grid { flex: 1 1 0%; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+    .deck-builder-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(220px, 0.9fr); gap: 12px; height: calc(100dvh - 130px); max-height: calc(100dvh - 130px); overflow: hidden; align-items: stretch; }
+    .card-pool { display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; overflow-x: hidden; }
+    #pool-grid { flex: 1 1 0%; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
     .deck-slot { display: flex; align-items: center; gap: 8px; padding: 6px; background: var(--panel2); border-radius: 8px; margin: 4px 0; border: 1px solid #334155; cursor: pointer; }
     .deck-slot:hover { border-color: var(--accent); }
 
@@ -1183,10 +1183,7 @@ function renderDeckBuilder() {
       el.style.filter = 'grayscale(0.7) brightness(0.7)';
       el.style.opacity = '0.45';
     }
-    el.onclick = () => {
-      if (!owned) { showToast('Unlock ' + c.name + ' first!'); return; }
-      addToDeck(c.id);
-    };
+    el.onclick = () => { inspectCardForDeck(c); };
     // Show copy count badge on owned pool cards
     const badge = document.createElement('div');
     badge.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:700;z-index:5;pointer-events:none;';
@@ -1320,6 +1317,53 @@ function playInspectedCard() {
   }
   closeInspect();
   playCard(card);
+}
+// ==================== DECK BUILDER INSPECT ====================
+let deckInspectingCard = null;
+
+function inspectCardForDeck(card) {
+  if (deckInspectingCard && deckInspectingCard.id === card.id) {
+    closeDeckInspect();
+    return;
+  }
+  deckInspectingCard = card;
+  document.getElementById('card-inspect-modal').classList.remove('hidden');
+  const m = document.getElementById('card-inspect-modal-text');
+  const nenColors = { enhancement: '#22c55e', transmutation: '#a855f7', emission: '#f97316', conjuration: '#06b6d4', manipulation: '#ec4899', specialization: '#f59e0b' };
+  const nenColor = nenColors[card.nen] || '#64748b';
+  const owned = collection[card.id] && collection[card.id].owned;
+  const copies = playerDeckList.filter(x => x === card.id).length;
+  const deckFull = playerDeckList.length >= 40;
+  const atCopyLimit = copies >= 3;
+  const canAdd = owned && !deckFull && !atCopyLimit;
+
+  m.innerHTML = `<button class="card-inspect-close" onclick="closeDeckInspect()">✕</button>
+    <div class="card-inspect-art"><img src="hxh-nen-battle/art-${card.id}.jpg" /></div>
+    <div class="card-inspect-name">${card.name}</div>
+    <div class="card-inspect-type">${card.type === 'character' ? 'Character' : 'Technique'} — ${card.nen}</div>
+    <span class="card-inspect-nen" style="background:${nenColor};">${card.nen} • ${card.rarity}</span>
+    <div class="card-inspect-text">${card.text}</div>
+    ${card.type === 'character' ? `<div class="card-inspect-stats">${card.power}/${card.toughness}</div>` : ''}
+    ${owned ? `<div class="card-inspect-copies">In deck: ${copies}/3</div>` : '<div class="card-inspect-locked">Locked — unlock in Collection</div>'}
+    <button class="play-card-btn" onclick="addInspectedCardToDeck()" ${!canAdd ? 'disabled' : ''}>${!owned ? 'Locked — Unlock in Collection' : atCopyLimit ? 'At Copy Limit (3/3)' : deckFull ? 'Deck Full (40/40)' : 'Add to Deck'}</button>
+    <button class="cancel-inspect-btn" onclick="closeDeckInspect()">Close</button>`;
+  const inspImg = document.querySelector('#card-inspect-modal-text img');
+  if (inspImg) {
+    inspImg.addEventListener('error', () => { inspImg.src = getFallbackArtUrl(card); inspImg.style.display = 'block'; });
+  }
+  updateUI();
+}
+
+function closeDeckInspect() {
+  deckInspectingCard = null;
+  document.getElementById('card-inspect-modal').classList.add('hidden');
+  updateUI();
+}
+
+function addInspectedCardToDeck() {
+  if (!deckInspectingCard) return;
+  addToDeck(deckInspectingCard.id);
+  closeDeckInspect();
 }
 // ==================== DOWSING CHAIN SELECTION ====================
 function showCardSelection(cards, onSelect) {
