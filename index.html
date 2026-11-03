@@ -1821,6 +1821,19 @@ async function aiPlayCards() {
       card = affordable[0];
     }
 
+    // Skip cards that have no legal target right now (don't waste aura)
+    if (card.needsTarget && card.targetMode) {
+      let hasTarget = false;
+      if (card.targetMode === 'enemy' || card.targetMode === 'enemyBig') {
+        hasTarget = state.player.board.length > 0;
+      } else if (card.targetMode === 'enemyOrFace') {
+        hasTarget = true;
+      } else if (card.targetMode === 'friendly') {
+        hasTarget = state.ai.board.length > 0;
+      }
+      if (!hasTarget) continue;
+    }
+
     state.ai.aura -= card.cost;
     state.ai.hand = state.ai.hand.filter(c => c.uid !== card.uid);
     log(`AI plays ${card.name}.`);
@@ -1866,6 +1879,11 @@ async function aiPlayCards() {
               state.ai.board.push(t);
             }
           }
+        } else if (card.targetMode === 'friendly' && state.ai.board.length) {
+          const t = state.ai.board[0];
+          if (card.buffP) { t.power += card.buffP; log(`AI ${card.name} gives ${cardById(t.id).name} +${card.buffP} power.`); SFX.heal(); }
+          if (card.buffT) { t.toughness += card.buffT; log(`AI ${card.name} gives ${cardById(t.id).name} +${card.buffT} toughness.`); SFX.heal(); }
+          if (card.unblockable) { t.unblockable = true; t.tempStatus = t.tempStatus || {}; t.tempStatus.unblockable = 'endTurn'; log(`AI ${card.name} makes ${cardById(t.id).name} unblockable.`); SFX.heal(); }
         } else {
           resolveUntargeted(card, 'ai');
         }
