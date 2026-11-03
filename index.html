@@ -64,7 +64,7 @@
     /* Ensure menu-screen centers content even when scrollable */
     #menu-screen {
       align-items: center; justify-content: center;
-      text-align: center; padding-top: 6px; padding-bottom: 60px;
+      text-align: center; padding-top: 6px; padding-bottom: 40px;
       background: radial-gradient(circle at 50% 30%, #1a1f2e 0%, #0a0f1a 100%);
       overflow-y: visible;
     }
@@ -76,7 +76,7 @@
       overflow: hidden;
       box-shadow: 0 0 0 2px rgba(52,211,153,0.3), 0 0 60px rgba(52,211,153,0.25);
       background: radial-gradient(ellipse at 50% 55%, #14532d 0%, #0a0f14 70%);
-      margin-bottom: 16px;
+      margin-bottom: 8px;
       backdrop-filter: blur(4px);
     }
     .title-hero-art {
@@ -117,7 +117,7 @@
       -webkit-text-stroke: 1px rgba(0,0,0,0.6);
     }
 
-    .menu-buttons { display: flex; flex-direction: column; gap: 12px; width: min(320px, 90vw); z-index: 3; position: relative; }
+    .menu-buttons { display: flex; flex-direction: column; gap: 8px; width: min(320px, 90vw); z-index: 3; position: relative; }
     .btn-primary {
       background: linear-gradient(135deg, #fbbf24, #d97706);
       color: #111; box-shadow: 0 4px 16px rgba(251,191,36,0.4);
@@ -449,8 +449,8 @@
     <div class="title-hero">
       <img class="title-hero-art" src="hxh-nen-battle/title-gon.jpg" onload="this.classList.add('loaded')" onerror="this.remove()" />
     </div>
-    <div id="menu-xp" style="text-align:center;color:var(--muted);font-size:12px;margin:8px 0;"></div>
-    <div style="text-align:center;margin:8px 0;">
+    <div id="menu-xp" style="text-align:center;color:var(--muted);font-size:12px;margin:4px 0;"></div>
+    <div style="text-align:center;margin:4px 0;">
       <button class="btn-secondary" onclick="exportProgress()" style="font-size:11px;padding:6px 10px;">Save Data</button>
       <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importProgress(this.files[0])">
       <button class="btn-secondary" onclick="document.getElementById('import-file').click()" style="font-size:11px;padding:6px 10px;">Load Data</button>
