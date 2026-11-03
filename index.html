@@ -921,9 +921,16 @@ function titleJingle() {
 
   titleAudio = new Audio('hxh-nen-battle/title-loop.wav');
   titleAudio.loop = true;
+  titleAudio.muted = true;  // start muted so autoplay is allowed
   titleAudio.volume = masterVolume * musicVolume;
-  titleAudio.play().catch(e => {
-    console.warn('Title audio play blocked (awaiting user gesture):', e);
+
+  titleAudio.play().then(() => {
+    // Autoplay succeeded — try to unmute after a moment
+    setTimeout(() => {
+      try { titleAudio.muted = false; } catch(e) {}
+    }, 500);
+  }).catch(e => {
+    console.warn('Title audio autoplay blocked:', e);
     titleJinglePlaying = false;
   });
 }
