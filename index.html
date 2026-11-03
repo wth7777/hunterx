@@ -255,10 +255,10 @@
 
     /* Collection / Gallery */
     .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding: 6px; max-height: 78vh; overflow-y: auto; }
-    .deck-list-view { background: var(--panel); border-radius: 12px; padding: 14px; border: 1px solid #243044; max-height: 70vh; overflow-y: auto; }
-    .deck-builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 12px; max-height: 72vh; overflow: hidden; }
-    .card-pool { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-    #pool-grid { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+    .deck-list-view { background: var(--panel); border-radius: 12px; padding: 14px; border: 1px solid #243044; height: 100%; min-height: 0; overflow-y: auto; }
+    .deck-builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 12px; height: calc(100dvh - 130px); max-height: calc(100dvh - 130px); overflow: hidden; align-items: stretch; }
+    .card-pool { display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; }
+    #pool-grid { flex: 1 1 0%; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
     .deck-slot { display: flex; align-items: center; gap: 8px; padding: 6px; background: var(--panel2); border-radius: 8px; margin: 4px 0; border: 1px solid #334155; cursor: pointer; }
     .deck-slot:hover { border-color: var(--accent); }
 
@@ -396,6 +396,7 @@
       .card-art { height: 62px; }
       .menu-buttons { width: min(280px, 90vw); }
       #deck-builder-layout { grid-template-columns: 1fr; }
+      .card-pool, .deck-list-view { max-height: 55vh; overflow-y: auto; }
       .mode-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 480px) {
