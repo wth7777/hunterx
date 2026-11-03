@@ -424,6 +424,7 @@
 </head>
 <body>
   <button class="sound-toggle" id="sound-btn" onclick="toggleSound()">🔊 On</button>
+  <div id="toast" style="position:fixed;top:12px;left:50%;transform:translateX(-50%);background:var(--panel2);color:#fff;padding:8px 14px;border-radius:999px;border:1px solid #334155;z-index:300;opacity:0;transition:opacity 0.3s;pointer-events:none;"></div>
   <div id="target-banner">Choose a target <button class="btn-secondary" onclick="cancelTargeting()">Cancel</button></div>
 
   <!-- MENU -->
@@ -436,6 +437,11 @@
       <div class="hero-brand">HUNTER × HUNTER</div>
       <div class="hero-sub">NEN CARD BATTLE</div>
     <div id="menu-xp" style="text-align:center;color:var(--muted);font-size:12px;margin:8px 0;"></div>
+    <div style="text-align:center;margin:8px 0;">
+      <button class="btn-secondary" onclick="exportProgress()" style="font-size:11px;padding:6px 10px;">Export Progress</button>
+      <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importProgress(this.files[0])">
+      <button class="btn-secondary" onclick="document.getElementById('import-file').click()" style="font-size:11px;padding:6px 10px;">Import Progress</button>
+    </div>
     </div>
     <div class="menu-buttons">
       <button class="btn-primary" onclick="startGame('easy')">Story — Easy</button>
@@ -474,7 +480,9 @@
   <div id="collection-screen" class="screen hidden">
     <button class="btn-secondary" onclick="showScreen('menu-screen')">← Back</button>
     <h2 style="margin:8px 0;color:var(--accent);text-align:center;">Collection</h2>
-    <div class="collection-grid" id="collection-grid"></div>
+    <div id="collection-grid"></div>
+    <div id="collection-footer" style="text-align:center;color:var(--muted);font-size:11px;margin-top:6px;"></div>
+    <div id="collection-status" style="text-align:center;color:var(--muted);font-size:11px;margin-top:4px;"></div>
     <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:6px;">Tap a card to inspect.</div>
   </div>
 
@@ -836,6 +844,16 @@ const SFX = {
   },
 };
 
+// ===== Toast feedback system =====
+function showToast(msg, ms = 2200) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, ms);
+}
+
 // Nen-type flavor modifiers (subtle, applied on top of base SFX)
 const NEN_FLAVOR = {
   enhancement: { detune: 0,   extraFreq: 0.85, extraVol: 0.04 }, // deeper/thudding
@@ -985,25 +1003,82 @@ let playerDeckList = [];
 let pendingSpell = null;
 let inspectingCard = null;       // card currently being inspected (null when not inspecting)
 let dowsingSelection = null;     // { cards: [], selectedIdx: null } for Dowsing Chain
-let collection = JSON.parse(localStorage.getItem('hxh_collection') || '{}');
-let playerXP = parseInt(localStorage.getItem('hxh_xp') || '0');
-let playerLevel = parseInt(localStorage.getItem('hxh_level') || '1');
-let unlockedCards = JSON.parse(localStorage.getItem('hxh_unlocked') || '["gon","killua","kurapika","leorio","hisoka","ten","ren","zetsu","heal","dowsing","illumi","shalnark","control","shizuku","chrollo","meruem","neferpitou","emperor-time","counter","gon-jajanken","killua-lightning","bungee","emission-blast","judgment","uvogin","netero","kite","razor","silva"]');
+let collection = {};
+let playerXP = 0;
+let playerLevel = 1;
+let unlockedCards = ["gon","killua","kurapika","leorio","hisoka","ten","ren","zetsu","heal","dowsing","illumi","shalnark","control","shizuku","chrollo","meruem","neferpitou","emperor-time","counter","gon-jajanken","killua-lightning","bungee","emission-blast","judgment","uvogin","netero","kite","razor","silva"];
+try {
+  collection = JSON.parse(localStorage.getItem('hxh_collection') || '{}');
+  playerXP = parseInt(localStorage.getItem('hxh_xp') || '0');
+  playerLevel = parseInt(localStorage.getItem('hxh_level') || '1');
+  unlockedCards = JSON.parse(localStorage.getItem('hxh_unlocked') || '["gon","killua","kurapika","leorio","hisoka","ten","ren","zetsu","heal","dowsing","illumi","shalnark","control","shizuku","chrollo","meruem","neferpitou","emperor-time","counter","gon-jajanken","killua-lightning","bungee","emission-blast","judgment","uvogin","netero","kite","razor","silva"]');
+} catch(e) { console.error('localStorage read failed:', e); }
 
 // Initialize all cards as collectible once seen
 function ensureCollection() {
-  CARD_DB.forEach(c => {
-    if (c.id !== 'weapon-token' && !(c.id in collection)) {
-      collection[c.id] = { owned: false, xp: 0, level: 1, copies: 0 };
-    }
-  });
-  saveCollection();
+  try {
+    CARD_DB.forEach(c => {
+      if (c.id !== 'weapon-token' && !(c.id in collection)) {
+        collection[c.id] = { owned: false, xp: 0, level: 1, copies: 0 };
+      }
+    });
+    saveCollection();
+  } catch(e) { console.error('ensureCollection failed:', e); }
 }
 function saveCollection() {
-  localStorage.setItem('hxh_collection', JSON.stringify(collection));
-  localStorage.setItem('hxh_xp', String(playerXP));
-  localStorage.setItem('hxh_level', String(playerLevel));
-  localStorage.setItem('hxh_unlocked', JSON.stringify(unlockedCards));
+  try {
+    localStorage.setItem('hxh_collection', JSON.stringify(collection));
+    localStorage.setItem('hxh_xp', String(playerXP));
+    localStorage.setItem('hxh_level', String(playerLevel));
+    localStorage.setItem('hxh_unlocked', JSON.stringify(unlockedCards));
+  } catch(e) { console.error('saveCollection failed:', e); }
+}
+
+function exportProgress() {
+  try {
+    const data = {
+      collection,
+      playerXP,
+      playerLevel,
+      unlockedCards,
+      deck: playerDeckList,
+      exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'hxh-progress-' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Progress exported.');
+  } catch(e) { console.error('exportProgress failed:', e); showToast('Export failed.'); }
+}
+
+function importProgress(file) {
+  if (!file) return;
+  try {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = JSON.parse(e.target.result);
+      if (!data.collection || typeof data.playerXP !== 'number') {
+        showToast('Invalid progress file.');
+        return;
+      }
+      collection = data.collection;
+      playerXP = data.playerXP;
+      playerLevel = data.playerLevel;
+      unlockedCards = data.unlockedCards || [];
+      if (data.deck) playerDeckList = data.deck;
+      saveCollection();
+      showToast('Progress imported.');
+      renderCollection();
+      renderDeckBuilder();
+    };
+    reader.readAsText(file);
+  } catch(e) { console.error('importProgress failed:', e); showToast('Import failed.'); }
 }
 function addXP(amount) {
   playerXP += amount;
@@ -1039,21 +1114,52 @@ function loadDefaultDeck() {
 }
 function clearDeck() { playerDeckList = []; renderDeckBuilder(); }
 function saveDeck() {
-  if (playerDeckList.length < 30) { alert('Need at least 30 cards.'); return; }
+  if (playerDeckList.length < 30) {
+    showToast('Need at least 30 cards to save.');
+    return;
+  }
+  // Validate copy counts (max 3 per card)
+  const counts = {};
+  for (const id of playerDeckList) counts[id] = (counts[id] || 0) + 1;
+  for (const [id, n] of Object.entries(counts)) {
+    if (n > 3) {
+      showToast(id + ' exceeds max copies (3).');
+      return;
+    }
+  }
   localStorage.setItem('hxh_nen_deck', JSON.stringify(playerDeckList));
-  alert('Deck saved (' + playerDeckList.length + ' cards)');
+  showToast('Deck saved (' + playerDeckList.length + ' cards).');
 }
 function addToDeck(id) {
-  if (playerDeckList.length >= 40) return;
-  if (playerDeckList.filter(x => x === id).length >= 3) return;
+  const c = cardById(id);
+  const owned = collection[id] && collection[id].owned;
+  if (!owned) {
+    showToast('Unlock ' + c.name + ' first!');
+    return;
+  }
+  if (playerDeckList.length >= 40) {
+    showToast('Deck is full (40 cards).');
+    return;
+  }
+  const copies = playerDeckList.filter(x => x === id).length;
+  if (copies >= 3) {
+    showToast(c.name + ' is at max copies (3/3).');
+    return;
+  }
   playerDeckList.push(id);
   SFX.click();
+  showToast('Added ' + c.name + ' to deck.');
   renderDeckBuilder();
 }
 function removeFromDeck(id) {
+  const c = cardById(id);
   const i = playerDeckList.indexOf(id);
-  if (i >= 0) playerDeckList.splice(i, 1);
-  renderDeckBuilder();
+  if (i >= 0) {
+    playerDeckList.splice(i, 1);
+    SFX.click();
+    showToast('Removed ' + c.name + '.');
+    renderDeckBuilder();
+  }
 }
 function renderDeckBuilder() {
   const pool = document.getElementById('pool-grid');
@@ -1061,8 +1167,21 @@ function renderDeckBuilder() {
   CARD_DB.filter(c => c.id !== 'weapon-token').forEach(c => {
     const el = createCardElement(c);
     const owned = collection[c.id] && collection[c.id].owned;
-    if (!owned) el.classList.add('unplayable');
-    el.onclick = () => { if (owned) addToDeck(c.id); else alert('Unlock this card first!'); };
+    const copies = playerDeckList.filter(x => x === c.id).length;
+    if (!owned) {
+      el.classList.add('unplayable');
+      el.style.filter = 'grayscale(0.7) brightness(0.7)';
+      el.style.opacity = '0.45';
+    }
+    el.onclick = () => {
+      if (!owned) { showToast('Unlock ' + c.name + ' first!'); return; }
+      addToDeck(c.id);
+    };
+    // Show copy count badge on owned pool cards
+    const badge = document.createElement('div');
+    badge.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:700;z-index:5;pointer-events:none;';
+    badge.textContent = owned ? `${copies}/3` : 'locked';
+    el.appendChild(badge);
     pool.appendChild(el);
   });
   const counts = {};
@@ -1385,6 +1504,21 @@ function startGame(diff) {
   lastDifficulty = diff;
   let pList = getSavedDeck();
   if (!pList || pList.length < 30) { loadDefaultDeck(); pList = playerDeckList; }
+  else {
+    // Validate saved deck: max 40, max 3 copies per card, all valid IDs
+    const validIds = new Set(CARD_DB.map(c => c.id));
+    const counts = {};
+    let invalid = false;
+    for (const id of pList) {
+      if (!validIds.has(id)) { invalid = true; break; }
+      counts[id] = (counts[id] || 0) + 1;
+      if (counts[id] > 3) { invalid = true; break; }
+    }
+    if (invalid || pList.length > 40) {
+      showToast('Saved deck invalid. Using default deck.');
+      loadDefaultDeck(); pList = playerDeckList;
+    }
+  }
   ensureToken();
   ensureCollection();
   document.getElementById('game-log').innerHTML = '';  // Clear log from previous match
@@ -2024,13 +2158,17 @@ function renderCollection() {
     div.onclick = () => showCardInspect(c, col);
     grid.appendChild(div);
   });
-  document.getElementById('collection-grid').parentElement.insertAdjacentHTML('beforeend', `<div style="text-align:center;color:var(--muted);font-size:11px;margin:6px;">Owned: ${ownedCount} / ${CARD_DB.filter(c=>c.id!=='weapon-token').length} • Player Level: ${playerLevel} (XP ${playerXP})</div>`);
+  const footer = document.getElementById('collection-footer');
+  if (footer) footer.textContent = `Owned: ${ownedCount} / ${CARD_DB.filter(c=>c.id!=='weapon-token').length} • Level ${playerLevel} (XP ${playerXP})`;
+  const status = document.getElementById('collection-status');
+  if (status) status.textContent = 'Progress saved in this browser only.';
 }
 
 function showCardInspect(card, col) {
   const owned = col && col.owned;
   const lvl = col ? col.level : 1;
   const xp = col ? col.xp : 0;
+  const cost = { common: 20, uncommon: 50, rare: 100, epic: 200, legendary: 400 }[card.rarity] || 50;
   const html = `
     <div style="text-align:left;">
       <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
@@ -2041,6 +2179,7 @@ function showCardInspect(card, col) {
             <span class="nen-badge nen-${card.nen}">${card.nen} • ${card.rarity}</span>
           </div>
           <div style="color:var(--muted);font-size:11px;margin:6px 0;">${card.type === 'character' ? 'Character' : 'Technique'} • ${owned ? 'Level ' + lvl : 'Locked'}</div>
+          ${!owned ? `<div style="color:#fbbf24;font-size:10px;margin:4px 0;">Unlock cost: ${cost} XP${playerXP >= cost ? ' (affordable)' : ' (need ' + (cost - playerXP) + ' more XP)'}</div>` : ''}
           <div style="font-size:10.5px;color:#cbd5e1;line-height:1.4;">${card.text}</div>
           ${card.type === 'character' ? `<div style="margin-top:8px;text-align:right;font-size:13px;font-weight:900;">${card.power}/${card.toughness}</div>` : ''}
         </div>
