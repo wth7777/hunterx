@@ -2091,6 +2091,12 @@ function startCampaignChapter(chapterId) {
   lastDifficulty = chapter.diff;
   ensureToken();
   ensureCollection();
+  // Stop title loop audio when starting a campaign game
+  if (titleAudio) {
+    try { titleAudio.pause(); titleAudio.currentTime = 0; } catch(e) {}
+    titleAudio = null;
+  }
+  titleJinglePlaying = false;
   document.getElementById('game-log').innerHTML = '';  // Clear log from previous match
   state = {
     difficulty: chapter.diff, turn: 1, active: 'player', phase: 'main',
