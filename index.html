@@ -2858,13 +2858,10 @@ ensureCampaignProgress();
 renderCampaignScreen();
 renderModes();
 // First user gesture unlocks audio
-document.body.addEventListener('click', () => ensureAudio(), { once: true });
-
-// Play title jingle on initial page load (menu is already visible)
-if (soundEnabled) {
+document.body.addEventListener('click', () => {
   ensureAudio();
   titleJingle();
-}
+}, { once: true });
 </script>
 <script src="hxh-nen-battle/test-suite.js"></script>
 </body>
