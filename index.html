@@ -484,10 +484,11 @@
   <div id="collection-screen" class="screen hidden">
     <button class="btn-secondary" onclick="showScreen('menu-screen')">← Back</button>
     <h2 style="margin:8px 0;color:var(--accent);text-align:center;">Collection</h2>
-    <div id="collection-grid"></div>
+    <div class="collection-screen-grid" style="display:flex;flex-direction:column;height:calc(100dvh - 140px);overflow:hidden;">
+      <div class="collection-grid" id="collection-grid" style="flex:1;min-height:0;overflow-y:auto;"></div>
+    </div>
     <div id="collection-footer" style="text-align:center;color:var(--muted);font-size:11px;margin-top:6px;"></div>
     <div id="collection-status" style="text-align:center;color:var(--muted);font-size:11px;margin-top:4px;"></div>
-    <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:6px;">Tap a card to inspect.</div>
   </div>
 
   <!-- DECK BUILDER -->
@@ -2226,6 +2227,7 @@ function showCardInspect(card, col) {
   const lvl = col ? col.level : 1;
   const xp = col ? col.xp : 0;
   const cost = { common: 20, uncommon: 50, rare: 100, epic: 200, legendary: 400 }[card.rarity] || 50;
+  const canAfford = playerXP >= cost;
   const html = `
     <div style="text-align:left;">
       <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
@@ -2236,23 +2238,22 @@ function showCardInspect(card, col) {
             <span class="nen-badge nen-${card.nen}">${card.nen} • ${card.rarity}</span>
           </div>
           <div style="color:var(--muted);font-size:11px;margin:6px 0;">${card.type === 'character' ? 'Character' : 'Technique'} • ${owned ? 'Level ' + lvl : 'Locked'}</div>
-          ${!owned ? `<div style="color:#fbbf24;font-size:10px;margin:4px 0;">Unlock cost: ${cost} XP${playerXP >= cost ? ' (affordable)' : ' (need ' + (cost - playerXP) + ' more XP)'}</div>` : ''}
+          ${!owned ? `<div style="color:#fbbf24;font-size:10px;margin:4px 0;">Unlock cost: ${cost} XP${canAfford ? ' (affordable)' : ' (need ' + (cost - playerXP) + ' more XP)'}</div>` : ''}
           <div style="font-size:10.5px;color:#cbd5e1;line-height:1.4;">${card.text}</div>
           ${card.type === 'character' ? `<div style="margin-top:8px;text-align:right;font-size:13px;font-weight:900;">${card.power}/${card.toughness}</div>` : ''}
         </div>
       </div>
       <div style="display:flex;gap:8px;justify-content:center;">
-        ${owned ? `<button class="btn-secondary" onclick="hideModal()">Close</button>` : `<button class="btn-primary" onclick="unlockCard('${card.id}')">Unlock</button>`}
+        ${owned ? `<button class="btn-secondary" onclick="closeInspect()">Close</button>` : `<button class="btn-primary" onclick="unlockCard('${card.id}')" ${!canAfford ? 'disabled' : ''} style="${!canAfford ? 'opacity:0.5;cursor:not-allowed;' : ''}">${canAfford ? 'Unlock' : 'Need ' + (cost - playerXP) + ' XP'}</button>`}
       </div>
     </div>
   `;
-  document.getElementById('modal-title').textContent = 'Card Inspection';
-  document.getElementById('modal-text').innerHTML = html;
-  const inspImg = document.getElementById('modal-text').querySelector('img');
+  document.getElementById('card-inspect-modal-text').innerHTML = html;
+  const inspImg = document.getElementById('card-inspect-modal-text').querySelector('img');
   if (inspImg) {
     inspImg.addEventListener('error', () => { inspImg.src = getFallbackArtUrl(card); inspImg.style.display = 'block'; });
   }
-  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.getElementById('card-inspect-modal').classList.remove('hidden');
 }
 
 function unlockCard(id) {
@@ -2267,12 +2268,12 @@ function unlockCard(id) {
     collection[id].copies = (collection[id].copies || 0) + 1;
     if (!unlockedCards.includes(id)) unlockedCards.push(id);
     saveCollection();
-    hideModal();
+    closeInspect();
     renderCollection();
     SFX.win();
-    showModal('Unlocked!', `Added ${c.name} to your collection.`);
+    showToast('Unlocked ' + c.name + '.');
   } else {
-    showModal('Not enough XP', `You need ${cost} XP to unlock ${c.name}.`);
+    showToast('Need ' + (cost - playerXP) + ' more XP.');
   }
 }
 
