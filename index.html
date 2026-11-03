@@ -1022,6 +1022,12 @@ function ensureCollection() {
         collection[c.id] = { owned: false, xp: 0, level: 1, copies: 0 };
       }
     });
+    // Starter cards in unlockedCards are owned by default — keep them usable
+    unlockedCards.forEach(id => {
+      if (id !== 'weapon-token' && collection[id]) {
+        collection[id].owned = true;
+      }
+    });
     saveCollection();
   } catch(e) { console.error('ensureCollection failed:', e); }
 }
@@ -1521,6 +1527,9 @@ function startGame(diff) {
   }
   ensureToken();
   ensureCollection();
+  // Auto-own all deck cards (covers saved and default decks)
+  pList.forEach(id => { if (collection[id]) collection[id].owned = true; });
+  saveCollection();
   document.getElementById('game-log').innerHTML = '';  // Clear log from previous match
   state = {
     difficulty: diff, turn: 1, active: 'player', phase: 'main',
