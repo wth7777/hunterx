@@ -1794,48 +1794,59 @@ async function aiPlayCards() {
     SFX.play();
     // Reveal the AI's card visually for ~2 seconds before resolving
     showAIPlayReveal(card);
-    await new Promise(r => setTimeout(r, 2000));
-    hideAIPlayReveal();
-    if (card.type === 'character') {
-      const inst = makeInstance(card);
-      applyEnterEffects(card, inst, 'ai');
-      if (card.needsTarget && card.targetMode === 'enemy' && state.player.board.length) {
-        const t = state.player.board[0];
-        if (card.dmgChar) { t.toughness -= card.dmgChar; flashCard(t.uid); }
-        if (card.tap) { t.tapped = true; t.skipUntap = true; }
-      }
-      state.ai.board.push(inst);
-      SFX.summon();
-    } else {
-      if (card.needsTarget) {
-        if (card.targetMode === 'enemyOrFace' || card.targetMode === 'enemy') {
-          if (state.player.board.length && card.dmgChar) {
-            const t = state.player.board[0];
-            t.toughness -= card.dmgChar;
-            log(`AI ${card.name} hits ${cardById(t.id).name}.`);
-            flashCard(t.uid); SFX.damage();
-          } else if (card.dmgFace) {
-            state.player.life -= card.dmgFace;
-            log(`AI ${card.name} hits you for ${card.dmgFace}.`);
-            flashFace('player'); SFX.damage();
-          }
-          if (card.bounce && state.player.board.length) {
-            const t = state.player.board.pop();
-            state.player.hand.push({ ...cardById(t.id), uid: uid() });
-          }
-          if (card.steal && state.player.board.length) {
-            const t = state.player.board.pop();
-            t.summoningSickness = false;
-            state.ai.board.push(t);
-          }
-        }
-      } else {
-        resolveUntargeted(card, 'ai');
-      }
+    try {
+      await new Promise(r => setTimeout(r, 2000));
+    } finally {
+      hideAIPlayReveal();  // Always hide overlay, even on error
     }
-    applyTempEffects();
-    cleanupDead();
-    if (state.player.life <= 0 || state.ai.life <= 0) { updateUI(); checkWin(); return; }
+    try {
+      if (card.type === 'character') {
+        const inst = makeInstance(card);
+        applyEnterEffects(card, inst, 'ai');
+        if (card.needsTarget && card.targetMode === 'enemy' && state.player.board.length) {
+          const t = state.player.board[0];
+          if (card.dmgChar) { t.toughness -= card.dmgChar; flashCard(t.uid); }
+          if (card.tap) { t.tapped = true; t.skipUntap = true; }
+        }
+        state.ai.board.push(inst);
+        SFX.summon();
+      } else {
+        if (card.needsTarget) {
+          if (card.targetMode === 'enemyOrFace' || card.targetMode === 'enemy') {
+            if (state.player.board.length && card.dmgChar) {
+              const t = state.player.board[0];
+              t.toughness -= card.dmgChar;
+              log(`AI ${card.name} hits ${cardById(t.id).name}.`);
+              flashCard(t.uid); SFX.damage();
+            } else if (card.dmgFace) {
+              state.player.life -= card.dmgFace;
+              log(`AI ${card.name} hits you for ${card.dmgFace}.`);
+              flashFace('player'); SFX.damage();
+            }
+            if (card.bounce && state.player.board.length) {
+              const t = state.player.board.pop();
+              state.player.hand.push({ ...cardById(t.id), uid: uid() });
+            }
+            if (card.steal && state.player.board.length) {
+              const t = state.player.board.pop();
+              t.summoningSickness = false;
+              state.ai.board.push(t);
+            }
+          }
+        } else {
+          resolveUntargeted(card, 'ai');
+        }
+      }
+      applyTempEffects();
+      cleanupDead();
+      if (state.player.life <= 0 || state.ai.life <= 0) { updateUI(); checkWin(); return; }
+    } catch (e) {
+      console.error('AI card play error:', e);
+      hideAIPlayReveal();
+      updateUI();
+      checkWin();
+      if (!state) return;
+    }
   }
   updateUI();
   setTimeout(aiCombat, 700);
@@ -1906,6 +1917,7 @@ function showScreen(id) {
   if (id !== 'game-screen') stopMusic();
   if (id === 'menu-screen') {
     document.getElementById('menu-xp').textContent = `Level ${playerLevel} • XP ${playerXP}`;
+    ensureAudio();
     if (soundEnabled) titleJingle();
   }
 }
