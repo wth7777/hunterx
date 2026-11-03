@@ -978,6 +978,43 @@ const CARD_DB = [
   // Tokens
   { id:'weapon-token', name:'Crazy Slot Weapon', type:'character', nen:'conjuration', rarity:'common', cost:0, power:2, toughness:2, level:1, maxLevel:1,
     text:'Token', art:'🗡️' },
+
+  // === NEW HUNTER × HUNTER CARDS ====
+  // Enhancement
+  { id:'phinks', name:'Phinks Magcub', type:'character', nen:'enhancement', rarity:'rare', cost:4, power:4, toughness:3, level:1, maxLevel:3,
+    text:'Circular Punches: When this attacks, gets +2/+0 until end of turn.', art:'👊' },
+  { id:'nobunaga', name:'Nobunaga Hazama', type:'character', nen:'enhancement', rarity:'uncommon', cost:3, power:3, toughness:2, level:1, maxLevel:3,
+    text:'Sword of Vengeance: Can\'t be blocked.', art:'⚔️', cantBlock:true },
+  { id:'biscuit', name:'Biscuit Krueger', type:'character', nen:'enhancement', rarity:'rare', cost:4, power:3, toughness:3, level:1, maxLevel:3,
+    text:'Muscle Training: When this enters, target character you control gets +2/+2 until end of turn.', art:'💪', needsTarget:true, targetMode:'friendly', buffP:2, buffT:2 },
+
+  // Transmutation
+  { id:'feitan', name:'Feitan', type:'character', nen:'transmutation', rarity:'epic', cost:4, power:3, toughness:2, level:1, maxLevel:3,
+    text:'Pain Packer: When this deals combat damage to a player, deal 2 damage to target character.', art:'🔥' },
+
+  // Emission
+  { id:'franklin', name:'Franklin', type:'character', nen:'emission', rarity:'epic', cost:5, power:5, toughness:4, level:1, maxLevel:3,
+    text:'Double Machine Gun: When this enters, deal 3 damage to any target.', art:'🔫', needsTarget:true, targetMode:'enemyOrFace', dmgChar:3, dmgFace:3 },
+
+  // Conjuration
+  { id:'machi', name:'Machi', type:'character', nen:'conjuration', rarity:'uncommon', cost:3, power:2, toughness:3, level:1, maxLevel:3,
+    text:'Needle People: When this enters, tap target character.', art:'🪡', needsTarget:true, targetMode:'enemy', tap:true },
+  { id:'pakunoda', name:'Pakunoda', type:'character', nen:'conjuration', rarity:'rare', cost:3, power:1, toughness:2, level:1, maxLevel:3,
+    text:'Memory Bomb: When this enters, look at opponent\'s hand.', art:'🧠' },
+
+  // Manipulation
+  { id:'morel', name:'Morel', type:'character', nen:'manipulation', rarity:'rare', cost:4, power:3, toughness:4, level:1, maxLevel:3,
+    text:'Deep Purple: When this enters, tap target character.', art:'💨', needsTarget:true, targetMode:'enemy', tap:true },
+
+  // Techniques
+  { id:'ko', name:'Ko — Focus', type:'technique', nen:'enhancement', rarity:'rare', cost:1,
+    text:'Target character gets +3/+0 until end of turn.', art:'💥', needsTarget:true, targetMode:'friendly', buffP:3 },
+  { id:'ken', name:'Ken — Guard', type:'technique', nen:'enhancement', rarity:'uncommon', cost:1,
+    text:'Target character gets +0/+3 until end of turn.', art:'🛡️', needsTarget:true, targetMode:'friendly', buffT:3 },
+  { id:'gyo', name:'Gyo — Focus', type:'technique', nen:'conjuration', rarity:'common', cost:1,
+    text:'Look at top card of your deck. You may put it into your hand.', art:'👁️' },
+  { id:'snake-awakens', name:'Snake Awakens', type:'technique', nen:'transmutation', rarity:'rare', cost:3,
+    text:'Target character gets +2/+0 until end of turn.', art:'🐍', needsTarget:true, targetMode:'friendly', buffP:2 },
 ];
 
 function ensureToken() {
@@ -1631,7 +1668,45 @@ function applyTempEffects() {
         if (b.tempStatus.unblockable === 'endTurn') delete b.tempStatus.unblockable;
       }
     });
+    // Synergy effects
+    applySynergyEffects(who);
   });
+}
+
+function applySynergyEffects(who) {
+  // Gon + Killua synergy: both get +1/+1 when on board together
+  const hasGon = who.board.some(b => b.id === 'gon');
+  const hasKillua = who.board.some(b => b.id === 'killua');
+  if (hasGon && hasKillua) {
+    who.board.forEach(b => {
+      if (b.id === 'gon' || b.id === 'killua') {
+        b.tempBuffs = b.tempBuffs || [];
+        const hasBuff = b.tempBuffs.some(buf => buf.source === 'gonKillua');
+        if (!hasBuff) {
+          b.tempBuffs.push({p:1, t:1, expire:'endTurn', source:'gonKillua'});
+          b.power++; b.toughness++;
+          log(`Gon & Killua synergy: ${cardById(b.id).name} gets +1/+1.`);
+        }
+      }
+    });
+  }
+
+  // Phantom Troupe synergy: 2+ Troupe members → all Troupe members get +1 power
+  const troupeIds = ['chrollo', 'illumi', 'shalnark', 'shizuku', 'phinks', 'franklin', 'feitan', 'machi', 'nobunaga', 'pakunoda'];
+  const troupeCount = who.board.filter(b => troupeIds.includes(b.id)).length;
+  if (troupeCount >= 2) {
+    who.board.forEach(b => {
+      if (troupeIds.includes(b.id)) {
+        b.tempBuffs = b.tempBuffs || [];
+        const hasBuff = b.tempBuffs.some(buf => buf.source === 'troupe');
+        if (!hasBuff) {
+          b.tempBuffs.push({p:1, t:0, expire:'endTurn', source:'troupe'});
+          b.power++;
+          log(`Phantom Troupe synergy: ${cardById(b.id).name} gets +1 power.`);
+        }
+      }
+    });
+  }
 }
 
 function updateUI() {
@@ -1755,7 +1830,8 @@ function makeInstance(card) {
     tapped: false,
     summoningSickness: card.id !== 'killua',
     attacking: false, blocking: false,
-    tempBuffs: [], tempStatus: {}
+    tempBuffs: [], tempStatus: {},
+    cantBlock: card.cantBlock || false
   };
 }
 
@@ -1797,6 +1873,10 @@ function applyEnterEffects(card, inst, owner) {
     const t = opp.board[0];
     t.tapped = true; t.skipUntap = true;
     log('Kurapika Chain Jail: tapped.');
+  }
+  if (card.id === 'pakunoda' && opp.hand.length) {
+    const handSize = opp.hand.length;
+    log(`Pakunoda Memory Bomb: opponent has ${handSize} cards in hand.`);
   }
 }
 
@@ -1906,6 +1986,7 @@ function resolveCombat(attackers, blockersMap, attackingSide) {
       let dmg = atk.power;
       if (atk.id === 'silva') dmg += 1;
       if (atk.id === 'uvogin') dmg += 2;
+      if (atk.id === 'phinks') dmg += 2;
       // Counter reduction
       if (defP.tempStatus && defP.tempStatus.counter) {
         dmg = Math.max(0, dmg - defP.tempStatus.counter);
@@ -1919,6 +2000,12 @@ function resolveCombat(attackers, blockersMap, attackingSide) {
       SFX.damage();
       flashFace(attackingSide === 'player' ? 'ai' : 'player');
       if (atk.id === 'shizuku' && defP.hand.length) { defP.hand.pop(); log('Blinky discards.'); }
+      if (atk.id === 'feitan' && defP.board.length) {
+        const t = defP.board[0];
+        t.toughness -= 2;
+        log(`Feitan Pain Packer: deals 2 damage to ${cardById(t.id).name}.`);
+        flashCard(t.uid); SFX.damage();
+      }
     }
     atk.attacking = false;
     atk.tapped = true;
