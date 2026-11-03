@@ -424,6 +424,10 @@
       .top-bar { padding: 6px 8px; gap: 4px; }
       .life-box { font-size: 1.1rem; }
     }
+
+    /* Campaign screen styles */
+    .campaign-grid { gap: 10px; justify-content: center; }
+
   </style>
 </head>
 <body>
@@ -453,6 +457,7 @@
       <button class="btn-primary" onclick="startGame('hard')">Quick Match — Hard</button>
       <button class="btn-secondary" onclick="showScreen('collection-screen')">Collection</button>
       <button class="btn-secondary" onclick="showScreen('deck-builder-screen')">Deck Builder</button>
+      <button class="btn-secondary" onclick="showScreen('campaign-screen')">Story Campaign</button>
       <button class="btn-secondary" onclick="showScreen('modes-screen')">Modes</button>
       <button class="btn-secondary" onclick="showScreen('rules-screen')">How to Play</button>
     </div>
@@ -489,6 +494,15 @@
     </div>
     <div id="collection-footer" style="text-align:center;color:var(--muted);font-size:11px;margin-top:6px;"></div>
     <div id="collection-status" style="text-align:center;color:var(--muted);font-size:11px;margin-top:4px;"></div>
+  </div>
+
+  <!-- CAMPAIGN / STORY MODE -->
+  <div id="campaign-screen" class="screen hidden">
+    <button class="btn-secondary" onclick="showScreen('menu-screen')">← Back</button>
+    <h2 style="margin:8px 0;color:var(--accent);text-align:center;">Story Campaign</h2>
+    <p style="text-align:center;color:var(--muted);font-size:11px;margin-bottom:12px;">Complete chapters to unlock cards and progress through the Hunter × Hunter story.</p>
+    <div class="campaign-grid" id="campaign-grid" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px;"></div>
+    <div id="campaign-status" style="text-align:center;color:var(--muted);font-size:11px;margin-top:4px;"></div>
   </div>
 
   <!-- DECK BUILDER -->
@@ -1017,6 +1031,92 @@ const CARD_DB = [
     text:'Target character gets +2/+0 until end of turn.', art:'🐍', needsTarget:true, targetMode:'friendly', buffP:2 },
 ];
 
+// ==================== CAMPAIGN CHAPTERS ====================
+// Chapter progression data for the Story Campaign mode
+// Each chapter defines: id, title, subtitle, description, diff, requiredLevel,
+// rewardXP, rewardCardId (unlockable card), enemyDeck (AI deck), unlocks
+const CAMPAIGN_CHAPTERS = [
+  {
+    id: 'hunter-exam',
+    title: 'Hunter Exam',
+    subtitle: 'The Beginning',
+    diff: 'easy',
+    description: 'Take the Hunter Exam and prove your worth as a Hunter.',
+    requiredLevel: 1,
+    rewardXP: 100,
+    rewardCardId: null,
+    enemyDeck: ['gon','killua','leorio','ten','ten','ren','heal','heal','killua-lightning','zetsu','gon-jajanken','kurapika','hisoka','emission-blast','dowsing','dowsing','bungee','control','shalnark','illumi','kite','razor','uvogin','chrollo','meruem','neferpitou','netero','silva','shizuku','judgment','emperor-time','gon','killua','leorio','ten'],
+    unlocks: [],
+  },
+  {
+    id: 'zoldyck-family',
+    title: 'Zoldyck Family',
+    subtitle: 'The Assassin Clan',
+    diff: 'medium',
+    description: 'Infiltrate the Zoldyck estate and face the deadly assassins.',
+    requiredLevel: 3,
+    rewardXP: 150,
+    rewardCardId: 'killua-lightning',
+    enemyDeck: ['killua','killua','killua-lightning','illumi','illumi','silva','silva','zetsu','zetsu','bungee','control','shalnark','chrollo','meruem','neferpitou','netero','razor','uvogin','chrollo','gon','leorio','kurapika','ten','ren','heal','bungee','dowsing','counter','hisoka','kurapika','chrollo'],
+    unlocks: ['killua-lightning'],
+  },
+  {
+    id: 'heavens-arena',
+    title: "Heaven's Arena",
+    subtitle: 'The Fighting Tower',
+    diff: 'medium',
+    description: 'Fight your way up the ranks of the Heaven\'s Arena.',
+    requiredLevel: 5,
+    rewardXP: 200,
+    rewardCardId: 'razor',
+    enemyDeck: ['razor','razor','killua','killua','gon','gon','leorio','leorio','kurapika','kurapika','hisoka','hisoka','meruem','neferpitou','uvogin','chrollo','illumi','shalnark','shizuku','kite','netero','emperor-time','judgment','counter','bungee','dowsing','emission-blast','gon-jajanken','killua-lightning'],
+    unlocks: ['razor'],
+  },
+  {
+    id: 'yorknew-city',
+    title: 'Yorknew City',
+    subtitle: 'The Phantom Troupe',
+    diff: 'hard',
+    description: 'Confront the Phantom Troupe in the underground auction.',
+    requiredLevel: 7,
+    rewardXP: 300,
+    rewardCardId: 'chrollo',
+    enemyDeck: ['chrollo','chrollo','chrollo','illumi','illumi','shalnark','shalnark','shizuku','shizuku','pakunoda','pakunoda','feitan','feitan','phinks','phinks','nobunaga','nobunaga','razor','uvogin','meruem','neferpitou','kite','silva','zetsu','judgment','emperor-time','bungee','control','emission-blast','killua-lightning','gon','killua','kurapika','leorio'],
+    unlocks: ['chrollo'],
+  },
+  {
+    id: 'greed-island',
+    title: 'Greed Island',
+    subtitle: 'The Game Within a Game',
+    diff: 'hard',
+    description: 'Enter the mysterious Greed Island game and collect its cards.',
+    requiredLevel: 9,
+    rewardXP: 400,
+    rewardCardId: 'kite',
+    enemyDeck: ['kite','kite','razor','razor','game-master','game-master','meruem','meruem','neferpitou','uvogin','chrollo','illumi','shalnark','shizuku','leorio','gon-jajanken','killua-lightning','emission-blast','judgment','control','emperor-time','ren','ren','ten','zetsu','heal','bungee','dowsing','counter','hisoka','kurapika','chrollo'],
+    unlocks: ['kite'],
+  },
+  {
+    id: 'chimera-ant',
+    title: 'Chimera Ant',
+    subtitle: 'The King\'s Gambit',
+    diff: 'legendary',
+    description: 'Face the Chimera Ants and the King Meruem in the final battle.',
+    requiredLevel: 12,
+    rewardXP: 500,
+    rewardCardId: 'meruem',
+    enemyDeck: ['meruem','meruem','neferpitou','neferpitou','uvogin','uvogin','chrollo','chrollo','hisoka','hisoka','killua','kurapika','razor','illumi','silva','kite','shalnark','shizuku','emperor-time','judgment','counter','gon-jajanken','emission-blast','killua-lightning','ren','ren','ten','zetsu','heal','bungee','dowsing','counter','netero','uvogin','meruem'],
+    unlocks: ['meruem'],
+  },
+];
+
+// Campaign progress state
+let campaignProgress = {
+  completedChapters: [],
+  currentChapter: null,
+  chapterAttempts: {},
+};
+
 function ensureToken() {
   if (!CARD_DB.find(c => c.id === 'weapon-token')) {
     CARD_DB.push({ id:'weapon-token', name:'Crazy Slot Weapon', type:'character', nen:'conjuration', rarity:'common', cost:0, power:2, toughness:2, level:1, maxLevel:1, text:'Token', art:'🗡️' });
@@ -1079,7 +1179,47 @@ function saveCollection() {
     localStorage.setItem('hxh_xp', String(playerXP));
     localStorage.setItem('hxh_level', String(playerLevel));
     localStorage.setItem('hxh_unlocked', JSON.stringify(unlockedCards));
+    saveCampaignProgress();
   } catch(e) { console.error('saveCollection failed:', e); }
+}
+
+function saveCampaignProgress() {
+  try {
+    localStorage.setItem('hxh_campaign', JSON.stringify(campaignProgress));
+  } catch(e) { console.error('saveCampaignProgress failed:', e); }
+}
+
+function loadCampaignProgress() {
+  try {
+    const saved = localStorage.getItem('hxh_campaign');
+    if (saved) {
+      campaignProgress = JSON.parse(saved);
+    }
+  } catch(e) { console.error('loadCampaignProgress failed:', e); }
+}
+
+function ensureCampaignProgress() {
+  // Ensure all campaign chapters are tracked
+  CAMPAIGN_CHAPTERS.forEach(chapter => {
+    if (!campaignProgress.completedChapters.includes(chapter.id)) {
+      campaignProgress.completedChapters = campaignProgress.completedChapters; // no-op, keep existing
+    }
+    if (campaignProgress.chapterAttempts[chapter.id] === undefined) {
+      campaignProgress.chapterAttempts[chapter.id] = 0;
+    }
+  });
+}
+
+// Check if a chapter is unlocked (all previous chapters completed)
+function isChapterUnlocked(chapterId) {
+  const chapter = CAMPAIGN_CHAPTERS.find(c => c.id === chapterId);
+  if (!chapter) return false;
+  if (chapter.requiredLevel <= playerLevel) {
+    // Check if all previous chapters are completed
+    const allChapters = CAMPAIGN_CHAPTERS.filter(c => CAMPAIGN_CHAPTERS.indexOf(c) < CAMPAIGN_CHAPTERS.indexOf(chapter));
+    return allChapters.every(c => campaignProgress.completedChapters.includes(c.id));
+  }
+  return false;
 }
 
 function exportProgress() {
@@ -1626,6 +1766,34 @@ function startGame(diff) {
   for (let i = 0; i < 5; i++) { drawCard(state.player); drawCard(state.ai); }
   showScreen('game-screen');
   log(`Game start — ${diff.toUpperCase()}. You go first.`);
+  updateUI();
+  if (soundEnabled) startMusic();
+}
+
+function startCampaignChapter(chapterId) {
+  const chapter = CAMPAIGN_CHAPTERS.find(c => c.id === chapterId);
+  if (!chapter) return;
+  if (!isChapterUnlocked(chapterId)) return;
+
+  lastDifficulty = chapter.diff;
+  ensureToken();
+  ensureCollection();
+  document.getElementById('game-log').innerHTML = '';  // Clear log from previous match
+  state = {
+    difficulty: chapter.diff, turn: 1, active: 'player', phase: 'main',
+    player: { life:20, maxAura:1, aura:1, deck: buildDeckFromList(playerDeckList), hand:[], board:[], grave:[] },
+    ai: { life:20, maxAura:1, aura:1, deck: buildDeckFromList(chapter.enemyDeck), hand:[], board:[], grave:[] },
+    attackers: []
+  };
+  for (let i = 0; i < 5; i++) { drawCard(state.player); drawCard(state.ai); }
+
+  campaignProgress.currentChapter = chapterId;
+  campaignProgress.chapterAttempts[chapterId] = (campaignProgress.chapterAttempts[chapterId] || 0) + 1;
+  saveCampaignProgress();
+
+  showScreen('game-screen');
+  log(`Campaign: ${chapter.title}`);
+  log(`Objective: ${chapter.description}`);
   updateUI();
   if (soundEnabled) startMusic();
 }
@@ -2231,8 +2399,31 @@ function checkWin() {
     } else {
       showModal('Victory!', `You defeated the ${state.difficulty} AI Hunter!`);
     }
-    state = null;
-    stopMusic();
+    
+    // Campaign chapter completion
+    if (campaignProgress.currentChapter) {
+      const chapter = CAMPAIGN_CHAPTERS.find(c => c.id === campaignProgress.currentChapter);
+      if (chapter && !campaignProgress.completedChapters.includes(chapter.id)) {
+        campaignProgress.completedChapters.push(chapter.id);
+        addXP(chapter.rewardXP);
+        
+        if (chapter.rewardCardId && !unlockedCards.includes(chapter.rewardCardId)) {
+          unlockedCards.push(chapter.rewardCardId);
+          collection[chapter.rewardCardId] = { owned: true, xp: 0, level: 1, copies: 0 };
+        }
+        
+        saveCampaignProgress();
+        
+        const rewardText = chapter.rewardCardId ? `\nRewards: +${chapter.rewardXP} XP, Unlocked: ${cardById(chapter.rewardCardId).name}` : `\nRewards: +${chapter.rewardXP} XP`;
+        showModal('Chapter Complete!', `You defeated the ${chapter.difficulty} Hunter!\n${rewardText}`);
+      } else {
+        state = null;
+        stopMusic();
+      }
+    } else {
+      state = null;
+      stopMusic();
+    }
   }
 }
 function concede() {
@@ -2253,6 +2444,7 @@ function showScreen(id) {
   dest.classList.add('visible');
   if (id === 'deck-builder-screen') renderDeckBuilder();
   if (id === 'collection-screen') renderCollection();
+  if (id === 'campaign-screen') renderCampaignScreen();
   if (id === 'modes-screen') renderModes();
   cancelTargeting();
   if (id !== 'game-screen') stopMusic();
@@ -2307,6 +2499,46 @@ function renderCollection() {
   if (footer) footer.textContent = `Owned: ${ownedCount} / ${CARD_DB.filter(c=>c.id!=='weapon-token').length} • Level ${playerLevel} (XP ${playerXP})`;
   const status = document.getElementById('collection-status');
   if (status) status.textContent = 'Progress saved in this browser only.';
+}
+
+function renderCampaignScreen() {
+  const grid = document.getElementById('campaign-grid');
+  const status = document.getElementById('campaign-status');
+  grid.innerHTML = '';
+  
+  let completedCount = 0;
+  CAMPAIGN_CHAPTERS.forEach((chapter, idx) => {
+    const unlocked = isChapterUnlocked(chapter.id);
+    const completed = campaignProgress.completedChapters.includes(chapter.id);
+    if (completed) completedCount++;
+    
+    const el = document.createElement('div');
+    el.style.flex = '0 0 240px';
+    el.style.background = completed ? 'var(--success)' : (unlocked ? 'var(--panel2)' : 'var(--panel)');
+    el.style.border = completed ? '2px solid var(--accent)' : (unlocked ? '1px solid var(--muted)' : '1px solid #334155');
+    el.style.borderRadius = '8px';
+    el.style.padding = '10px';
+    el.style.textAlign = 'center';
+    el.style.color = completed ? '#000' : '#fff';
+    el.style.cursor = unlocked ? 'pointer' : 'not-allowed';
+    el.style.opacity = unlocked ? '1' : '0.5';
+    el.onclick = unlocked && !completed ? () => startCampaignChapter(chapter.id) : null;
+    
+    const diffColor = { easy: 'var(--success)', medium: 'var(--warning)', hard: 'var(--danger)', legendary: 'var(--legendary)' }[chapter.diff] || '#fff';
+    
+    el.innerHTML = `
+      <div style="font-weight:bold;font-size:14px;margin-bottom:2px;">${chapter.title}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">${chapter.subtitle}</div>
+      <div style="font-size:9px;padding:2px 6px;background:var(--panel);border-radius:4px;color:${diffColor};font-weight:bold;display:inline-block;margin-bottom:6px;">${chapter.diff.toUpperCase()}</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">${chapter.description}</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Lvl ${chapter.requiredLevel}+</div>
+      ${completed ? '<div style="color:#000;font-weight:bold;font-size:11px;">✓ COMPLETED</div>' : unlocked ? '<div style="font-size:11px;color:var(--accent);font-weight:bold;">Start Chapter</div>' : '<div style="font-size:11px;color:#666;">Locked</div>'}
+      ${chapter.rewardCardId ? '<div style="font-size:9px;color:var(--muted);margin-top:6px;">Reward: ' + cardById(chapter.rewardCardId).name + '</div>' : ''}
+    `;
+    grid.appendChild(el);
+  });
+  
+  status.textContent = 'Completed: ' + completedCount + ' / ' + CAMPAIGN_CHAPTERS.length + ' chapters';
 }
 
 function showCardInspect(card, col) {
@@ -2401,6 +2633,9 @@ function renderModes() {
 // ==================== INIT ====================
 loadDefaultDeck();
 ensureCollection();
+loadCampaignProgress();
+ensureCampaignProgress();
+renderCampaignScreen();
 renderModes();
 // First user gesture unlocks audio
 document.body.addEventListener('click', () => ensureAudio(), { once: true });
