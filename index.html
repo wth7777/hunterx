@@ -2375,8 +2375,81 @@ function hideAIPlayReveal() {
   document.getElementById('ai-reveal-card-content').innerHTML = '';
 }
 
+// Smart AI target selection - evaluates all valid targets and picks the best one
+function selectAITarget(card, targetMode) {
+  const ai = state.ai;
+  const player = state.player;
+  
+  if (targetMode === 'enemy' || targetMode === 'enemyBig') {
+    const targets = ai.board.length > 0 ? player.board.filter(b => 
+      targetMode === 'enemyBig' ? b.power >= 4 : true
+    ) : [];
+    if (!targets.length) return null;
+    
+    // Score each target based on card effect
+    let best = null, bestScore = -Infinity;
+    targets.forEach(t => {
+      let score = 0;
+      // Damage spells: prefer killing, then strongest
+      if (card.dmgChar) {
+        if (t.toughness <= card.dmgChar) score += 100; // kill
+        score += t.power * 10; // strong target
+        score += t.toughness * 5;
+      }
+      // Tap effects: prefer strongest
+      if (card.tap) score += t.power * 15 + t.toughness * 5;
+      // Bounce/steal: prefer strongest
+      if (card.bounce || card.steal) score += t.power * 15 + t.toughness * 5;
+      if (score > bestScore) { bestScore = score; best = t; }
+    });
+    return best;
+  }
+  
+  if (targetMode === 'enemyOrFace') {
+    // Try enemy targets first
+    const enemyTargets = player.board.filter(b => true);
+    let bestEnemy = null, bestEnemyScore = -Infinity;
+    enemyTargets.forEach(t => {
+      let score = 0;
+      if (card.dmgChar) {
+        if (t.toughness <= card.dmgChar) score += 100;
+        score += t.power * 10;
+      }
+      if (score > bestEnemyScore) { bestEnemyScore = score; bestEnemy = t; }
+    });
+    
+    // Compare with face damage
+    let faceScore = card.dmgFace || 0;
+    if (player.life <= faceScore + 2) faceScore += 50; // finishing move
+    
+    if (bestEnemy && bestEnemyScore > faceScore) return bestEnemy;
+    return { id: 'face', name: 'Player', toughness: 999 }; // face target
+  }
+  
+  if (targetMode === 'friendly') {
+    const targets = ai.board.filter(b => b.id !== 'weapon-token');
+    if (!targets.length) return null;
+    
+    let best = null, bestScore = -Infinity;
+    targets.forEach(t => {
+      let score = 0;
+      // Buff spells: prefer weaker units (more relative benefit)
+      if (card.buffP || card.buffT) {
+        score += (10 - t.power) * 10; // weaker = higher score
+        score += (10 - t.toughness) * 5;
+        // Already strong units get less benefit
+        score -= t.power * 2;
+      }
+      if (score > bestScore) { bestScore = score; best = t; }
+    });
+    return best;
+  }
+  
+  return null;
+}
+
 async function aiPlayCards() {
-  if (!state) return;  // Guard: game may have ended
+  if (!state) return;
   let guard = 12;
   while (guard-- > 0) {
     const affordable = state.ai.hand.filter(c => c.cost <= state.ai.aura);
@@ -2384,9 +2457,7 @@ async function aiPlayCards() {
 
     let card;
     if (state.difficulty === 'easy') {
-      // Easy AI: 15% chance to pass turn even when cards are playable
       if (Math.random() < 0.15) break;
-      // Easy AI: play cheapest affordable card half the time, random the rest
       if (Math.random() < 0.50) {
         affordable.sort((a, b) => a.cost - b.cost);
         card = affordable[0];
@@ -2401,71 +2472,70 @@ async function aiPlayCards() {
       card = affordable[0];
     }
 
-    // Skip cards that have no legal target right now (don't waste aura)
+    // Skip cards that have no legal target right now
     if (card.needsTarget && card.targetMode) {
-      let hasTarget = false;
-      if (card.targetMode === 'enemy' || card.targetMode === 'enemyBig') {
-        hasTarget = state.player.board.length > 0;
-      } else if (card.targetMode === 'enemyOrFace') {
-        hasTarget = true;
-      } else if (card.targetMode === 'friendly') {
-        hasTarget = state.ai.board.length > 0;
-      }
-      if (!hasTarget) continue;
+      const target = selectAITarget(card, card.targetMode);
+      if (!target) continue;
     }
 
     state.ai.aura -= card.cost;
     state.ai.hand = state.ai.hand.filter(c => c.uid !== card.uid);
     log(`AI plays ${card.name}.`);
     SFX.play();
-    // Reveal the AI's card visually for ~2 seconds before resolving
     showAIPlayReveal(card);
     try {
       await new Promise(r => setTimeout(r, 2000));
     } finally {
-      hideAIPlayReveal();  // Always hide overlay, even on error
+      hideAIPlayReveal();
     }
     try {
       if (card.type === 'character') {
         const inst = makeInstance(card);
         applyEnterEffects(card, inst, 'ai');
-        if (card.needsTarget && card.targetMode === 'enemy' && state.player.board.length) {
-          const t = state.player.board[0];
-          if (card.dmgChar) { t.toughness -= card.dmgChar; flashCard(t.uid); }
-          if (card.tap) { t.tapped = true; t.skipUntap = true; }
+        
+        // Handle targeted enter effects with smart AI targeting
+        if (card.needsTarget && card.targetMode) {
+          const target = selectAITarget(card, card.targetMode);
+          if (target) {
+            // Apply enter effect with target via the effect system
+            // The effect system's 'enter' trigger handler will use the target
+            // We need to pass the target to the effect system
+            // For now, handle common enter effects directly for targeted cards
+            if (card.id === 'kurapika' || card.id === 'machi' || card.id === 'morel') {
+              target.tapped = true;
+              target.skipUntap = true;
+              log(`AI ${card.name} taps ${cardById(target.id).name}.`);
+              flashCard(target.uid);
+            } else if (card.id === 'leorio' || card.id === 'razor' || card.id === 'franklin') {
+              target.toughness -= (card.id === 'razor' ? 2 : card.id === 'franklin' ? 3 : 1);
+              log(`AI ${card.name} deals damage to ${cardById(target.id).name}.`);
+              flashCard(target.uid); SFX.damage();
+            } else if (card.id === 'biscuit') {
+              target.power += 2; target.toughness += 2;
+              target.tempBuffs = target.tempBuffs || [];
+              target.tempBuffs.push({p:2,t:2,source:'biscuit-buff',duration:'endTurn'});
+              log(`AI Biscuit buffs ${cardById(target.id).name} +2/+2.`);
+              SFX.heal();
+            }
+          }
         }
+        
         state.ai.board.push(inst);
         SFX.summon();
       } else {
+        // Technique - use unified effect resolution with smart targeting
         if (card.needsTarget) {
-          if (card.targetMode === 'enemyOrFace' || card.targetMode === 'enemy') {
-            if (state.player.board.length && card.dmgChar) {
-              const t = state.player.board[0];
-              t.toughness -= card.dmgChar;
-              log(`AI ${card.name} hits ${cardById(t.id).name}.`);
-              flashCard(t.uid); SFX.damage();
-            } else if (card.dmgFace) {
-              state.player.life -= card.dmgFace;
-              log(`AI ${card.name} hits you for ${card.dmgFace}.`);
-              flashFace('player'); SFX.damage();
-            }
-            if (card.bounce && state.player.board.length) {
-              const t = state.player.board.pop();
-              state.player.hand.push({ ...cardById(t.id), uid: uid() });
-            }
-            if (card.steal && state.player.board.length) {
-              const t = state.player.board.pop();
-              t.summoningSickness = false;
-              state.ai.board.push(t);
-            }
+          const target = selectAITarget(card, card.targetMode);
+          if (target) {
+            resolveCardEffect(card, null, 'ai', target);
+          } else {
+            // No valid target, skip this card
+            state.ai.aura += card.cost; // refund aura
+            state.ai.hand.push(card); // put back in hand
+            continue;
           }
-        } else if (card.targetMode === 'friendly' && state.ai.board.length) {
-          const t = state.ai.board[0];
-          if (card.buffP) { t.power += card.buffP; log(`AI ${card.name} gives ${cardById(t.id).name} +${card.buffP} power.`); SFX.heal(); }
-          if (card.buffT) { t.toughness += card.buffT; log(`AI ${card.name} gives ${cardById(t.id).name} +${card.buffT} toughness.`); SFX.heal(); }
-          if (card.unblockable) { t.unblockable = true; t.tempStatus = t.tempStatus || {}; t.tempStatus.unblockable = 'endTurn'; log(`AI ${card.name} makes ${cardById(t.id).name} unblockable.`); SFX.heal(); }
         } else {
-          resolveUntargeted(card, 'ai');
+          resolveCardEffect(card, null, 'ai', null);
         }
       }
       applyTempEffects();
