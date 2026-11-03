@@ -256,6 +256,9 @@
     /* Collection / Gallery */
     .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding: 6px; max-height: 78vh; overflow-y: auto; }
     .deck-list-view { background: var(--panel); border-radius: 12px; padding: 14px; border: 1px solid #243044; max-height: 70vh; overflow-y: auto; }
+    .deck-builder-layout { display: grid; grid-template-columns: 1fr 320px; gap: 12px; max-height: 72vh; overflow: hidden; }
+    .card-pool { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    #pool-grid { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
     .deck-slot { display: flex; align-items: center; gap: 8px; padding: 6px; background: var(--panel2); border-radius: 8px; margin: 4px 0; border: 1px solid #334155; cursor: pointer; }
     .deck-slot:hover { border-color: var(--accent); }
 
@@ -392,7 +395,7 @@
       .card { width: 120px; height: 180px; font-size: 9.5px; }
       .card-art { height: 62px; }
       .menu-buttons { width: min(280px, 90vw); }
-      #deck-builder { grid-template-columns: 1fr; }
+      #deck-builder-layout { grid-template-columns: 1fr; }
       .mode-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 480px) {
@@ -490,7 +493,7 @@
   <div id="deck-builder-screen" class="screen hidden">
     <button class="btn-secondary" onclick="showScreen('menu-screen')">← Back</button>
     <h2 style="margin:6px 0;color:var(--accent);">Deck Builder <span id="deck-size" style="color:var(--muted);font-weight:normal;">(0 / 40)</span></h2>
-    <div style="display:grid;grid-template-columns:1fr 320px;gap:12px;max-height:72vh;overflow:hidden;">
+    <div class="deck-builder-layout">
       <div class="card-pool">
         <h3 style="color:var(--muted);font-size:11px;margin-bottom:6px;">Card Pool</h3>
         <div class="pool-grid" id="pool-grid"></div>
