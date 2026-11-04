@@ -195,6 +195,8 @@
     .card-art .art-placeholder { font-size: 28px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
     .card-text { flex: 1; color: #cbd5e1; font-size: 8.5px; line-height: 1.3; overflow: hidden; padding-bottom: 2px; }
     .card-stats { margin-top: auto; text-align: right; font-weight: 900; font-size: 14px; background: #020617; padding: 2px 7px; border-radius: 6px; align-self: flex-end; border: 1px solid #1e293b; letter-spacing: 0.02em; }
+    .blocker-selected { border-color: var(--accent); box-shadow: 0 0 14px rgba(251,191,36,0.6); }
+    .attacker-selected { border-color: var(--danger); box-shadow: 0 0 14px rgba(239,68,68,0.6); }
     .card.technique { border-style: dashed; border-width: 2px; }
     .card.technique .card-stats { display: none; }
     .card.rarity-common { border-color: rgba(100,116,139,0.35); }
@@ -636,6 +638,8 @@
       <button class="btn-success hidden" id="btn-confirm-attack" onclick="confirmAttackers()">Confirm Attackers</button>
 <button class="btn-secondary hidden" id="btn-play-card" onclick="playInspectedCard()">PLAY CARD</button>
       <button class="btn-secondary hidden" id="btn-skip-combat" onclick="skipCombat()">Skip Combat</button>
+      <button class="btn-primary hidden" id="btn-confirm-blockers" onclick="confirmBlockers()">Confirm Blocks</button>
+      <button class="btn-secondary hidden" id="btn-skip-blocking" onclick="skipBlocking()">Skip Blocking</button>
       <button class="btn-danger" onclick="concede()">Concede</button>
     </div>
   </div>
@@ -2230,6 +2234,7 @@ function updateUI() {
   const phaseMap = {
     main: state.active === 'player' ? 'Your Turn — Main' : 'AI Turn',
     combat: 'Declare Attackers',
+    blocking: 'AI is attacking — choose blockers',
     end: 'End Step'
   };
   document.getElementById('phase-label').textContent = phaseMap[state.phase] || state.phase;
@@ -2257,6 +2262,8 @@ function updateUI() {
   document.getElementById('btn-end-main').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'main' && !pendingSpell));
   document.getElementById('btn-confirm-attack').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
   document.getElementById('btn-skip-combat').classList.toggle('hidden', !(state.active === 'player' && state.phase === 'combat'));
+  document.getElementById('btn-confirm-blockers').classList.toggle('hidden', !(state.phase === 'blocking'));
+  document.getElementById('btn-skip-blocking').classList.toggle('hidden', !(state.phase === 'blocking'));
   const playCardBtn = document.getElementById('btn-play-card');
   const canPlayInspected = inspectingCard && state.active === 'player' && state.phase === 'main' && inspectingCard.cost <= state.player.aura && !pendingSpell;
   playCardBtn.classList.toggle('hidden', !inspectingCard || state.active !== 'player' || state.phase !== 'main' || pendingSpell);
@@ -2283,6 +2290,18 @@ function renderBoard(elId, board, side) {
     } else if (side === 'player' && state.active === 'player' && state.phase === 'combat') {
       if (!inst.tapped && !inst.summoningSickness) {
         elCard.onclick = () => toggleAttacker(inst);
+      }
+    } else if (side === 'player' && state.phase === 'blocking') {
+      if (!inst.tapped && !inst.summoningSickness) {
+        const isSelected = state.selectedBlockerUid === inst.uid;
+        elCard.classList.toggle('blocker-selected', isSelected);
+        elCard.onclick = () => toggleBlocker(inst);
+      }
+    } else if (side === 'ai' && state.phase === 'blocking') {
+      if (inst.attacking) {
+        const isSelected = state.selectedAttackerUid === inst.uid;
+        elCard.classList.toggle('attacker-selected', isSelected);
+        elCard.onclick = () => toggleBlockerTarget(inst);
       }
     }
     el.appendChild(elCard);
@@ -2714,18 +2733,63 @@ function aiCombat() {
   if (!attackers.length) { log('AI skips combat.'); endTurn(); return; }
   log(`AI attacks with ${attackers.length}.`);
   SFX.attack();
-  const blockersMap = {};
-  const myB = state.player.board.filter(b => !b.tapped);
-  attackers.forEach(atk => {
-    if (atk.unblockable) return;
-    const viable = myB.filter(bl => !Object.values(blockersMap).includes(bl.uid));
-    if (!viable.length) return;
-    viable.sort((a,b) => b.toughness - a.toughness);
-    const chosen = viable.find(bl => bl.power >= atk.toughness) || (atk.power >= 3 ? viable[0] : null);
-    if (chosen) { blockersMap[atk.uid] = chosen.uid; chosen.blocking = true; }
-  });
-  resolveCombat(attackers, blockersMap, 'ai');
-  if (!state) return;  // Guard: game may have ended
+  state.phase = 'blocking';
+  state.aiAttackers = attackers;
+  state.blockersMap = {};
+  state.selectedBlockerUid = null;
+  state.selectedAttackerUid = null;
+  updateUI();
+}
+
+function toggleBlocker(inst) {
+  if (state.phase !== 'blocking') return;
+  if (inst.tapped || inst.summoningSickness) return;
+  if (state.selectedBlockerUid === inst.uid) {
+    state.selectedBlockerUid = null;
+  } else if (state.selectedAttackerUid) {
+    state.blockersMap[state.selectedAttackerUid] = inst.uid;
+    state.selectedAttackerUid = null;
+    state.selectedBlockerUid = null;
+  } else {
+    state.selectedBlockerUid = inst.uid;
+  }
+  updateUI();
+}
+
+function toggleBlockerTarget(inst) {
+  if (state.phase !== 'blocking') return;
+  if (!inst.attacking) return;
+  if (state.selectedAttackerUid === inst.uid) {
+    state.selectedAttackerUid = null;
+  } else if (state.selectedBlockerUid) {
+    state.blockersMap[inst.uid] = state.selectedBlockerUid;
+    state.selectedAttackerUid = null;
+    state.selectedBlockerUid = null;
+  } else {
+    state.selectedAttackerUid = inst.uid;
+  }
+  updateUI();
+}
+
+function confirmBlockers() {
+  const attackers = state.aiAttackers;
+  state.aiAttackers = null;
+  state.selectedBlockerUid = null;
+  state.selectedAttackerUid = null;
+  resolveCombat(attackers, state.blockersMap, 'ai');
+  state.blockersMap = {};
+  if (!state) return;
+  endTurn();
+}
+
+function skipBlocking() {
+  const attackers = state.aiAttackers;
+  state.aiAttackers = null;
+  state.selectedBlockerUid = null;
+  state.selectedAttackerUid = null;
+  state.blockersMap = {};
+  resolveCombat(attackers, {}, 'ai');
+  if (!state) return;
   endTurn();
 }
 
