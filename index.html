@@ -32,7 +32,6 @@
       height: -webkit-fill-available;
       width: 100%;
       overflow: hidden;
-      overscroll-behavior: none;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
@@ -240,7 +239,7 @@
     .modal-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
     /* Battlefield */
-    #game-screen { flex-direction: column; gap: 6px; padding: 6px env(safe-area-inset-right) 6px env(safe-area-inset-bottom) 6px env(safe-area-inset-left); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    #game-screen { flex-direction: column; gap: 6px; padding: 6px env(safe-area-inset-right) 6px env(safe-area-inset-bottom) 6px env(safe-area-inset-left); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: none; }
     .top-bar {
       display: flex; justify-content: space-between; align-items: center;
       background: var(--panel); padding: 8px 10px; border-radius: 10px;
@@ -468,7 +467,7 @@
   </div>
 
   <!-- RULES -->
-  <div id="rules-screen" class="screen hidden" style="overflow-y: auto; -webkit-overflow-scrolling: touch;">
+  <div id="rules-screen" class="screen hidden" style="overflow-y: scroll; -webkit-overflow-scrolling: touch;">
     <button class="btn-secondary" onclick="showScreen('menu-screen')">← Back</button>
     <div style="max-width: 620px; margin: 0 auto; line-height: 1.7; color: #cbd5e1; font-size: 15px;">
       <h2 style="text-align:center;margin:10px 0;color:var(--accent);">How to Play</h2>
