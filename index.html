@@ -49,6 +49,20 @@
       overflow-y: scroll;
       -webkit-overflow-scrolling: touch;
     }
+    #rules-screen {
+      height: 100dvh;
+      height: -webkit-fill-available;
+      max-height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 0;
+    }
+    #rules-screen .rules-content {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
     button {
       cursor: pointer; border: none; border-radius: 10px;
       padding: 11px 20px; font-weight: 600; font-size: 14px;
@@ -467,9 +481,9 @@
   </div>
 
   <!-- RULES -->
-  <div id="rules-screen" class="screen hidden" style="overflow-y: scroll; -webkit-overflow-scrolling: touch;">
-    <button class="btn-secondary" onclick="showScreen('menu-screen')">← Back</button>
-    <div style="max-width: 620px; margin: 0 auto; line-height: 1.7; color: #cbd5e1; font-size: 15px;">
+  <div id="rules-screen" class="screen hidden" style="height: 100dvh; height: -webkit-fill-available; max-height: 100dvh; overflow: hidden; display: flex; flex-direction: column; padding-bottom: 0;">
+    <button class="btn-secondary" onclick="showScreen('menu-screen')" style="flex-shrink:0; margin-bottom:8px;">← Back</button>
+    <div class="rules-content" style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:40px;">
       <h2 style="text-align:center;margin:10px 0;color:var(--accent);">How to Play</h2>
       <h3>🎯 Goal</h3><p>Reduce your opponent's Life from 20 to 0.</p>
       <h3>⚡ Aura (Your Energy)</h3><ul style="margin:6px 0; padding-left:18px;">
