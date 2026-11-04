@@ -46,7 +46,7 @@
       display: none;
       flex-direction: column;
       gap: 6px;
-      overflow-y: scroll;
+      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
     #rules-screen {
@@ -255,7 +255,9 @@
     .modal-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
     /* Battlefield */
-    #game-screen { flex-direction: column; gap: 6px; padding: 6px env(safe-area-inset-right) 6px env(safe-area-inset-bottom) 6px env(safe-area-inset-left); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: none; }
+    #game-screen { flex-direction: column; gap: 6px; padding: 6px env(safe-area-inset-right) 6px env(safe-area-inset-bottom) 6px env(safe-area-inset-left); height: 100dvh; height: -webkit-fill-available; overflow: hidden; display: flex; flex-direction: column; }
+    #game-screen .battlefield { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
+    #game-controls { flex-shrink: 0; }
     .top-bar {
       display: flex; justify-content: space-between; align-items: center;
       background: var(--panel); padding: 8px 10px; border-radius: 10px;
