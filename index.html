@@ -472,15 +472,44 @@
     <button class="btn-secondary" onclick="showScreen('menu-screen')">← Back</button>
     <div style="max-width: 620px; margin: 0 auto; line-height: 1.7; color: #cbd5e1; font-size: 15px;">
       <h2 style="text-align:center;margin:10px 0;color:var(--accent);">How to Play</h2>
-      <h3>🎯 Goal</h3><p>Reduce your opponent's Life from 20 down to 0 to win!</p>
-      <h3>⚡ Aura</h3><p>Aura is the energy you use to play cards. You start with 1 Aura, and it goes up by 1 each turn (max 10). Your Aura refills fully at the start of your turn. Playing a card costs Aura.</p>
-      <h3>🔄 Turn Flow</h3><p><b>Draw → Play Cards → Combat → End Turn</b><br/>
-        1. <b>Draw:</b> You draw 1 card.<br/>
-        2. <b>Play Cards:</b> Spend Aura to play cards from your hand.<br/>
-        3. <b>Combat:</b> Pick which characters attack, and block with your characters.<br/>
-        4. <b>End Turn:</b> Your turn ends and the AI takes its turn.</p>
-      <h3>🎯 Targeting</h3><p>Some cards need a target. You'll see glowing targets you can tap on the board or on the AI.</p>
-      <h3>💠 Nen Types</h3><p>Every character and technique has a Nen type:</p>
+      <h3>🎯 Goal</h3><p>Reduce your opponent's Life from 20 to 0.</p>
+      <h3>⚡ Aura (Your Energy)</h3><ul style="margin:6px 0; padding-left:18px;">
+        <li>You start with 1 Aura.</li>
+        <li>At the beginning of each of your turns, your maximum Aura increases by 1 (up to 10) and it fully refills.</li>
+        <li>Every card has an Aura cost in the top-right corner. You must pay that cost to play it.</li>
+      </ul>
+      <h3>🃏 Card Types</h3><ul style="margin:6px 0; padding-left:18px;">
+        <li><b>Characters —</b> Stay on the board. They can attack and block. They have Power/Toughness (e.g., 3/2).</li>
+        <li><b>Techniques —</b> One-shot effects. They resolve immediately and go away.</li>
+      </ul>
+      <h3>🔄 Your Turn — Step by Step</h3>
+      <h4>1. Draw Phase</h4><p>You automatically draw 1 card.</p>
+      <h4>2. Main Phase (Play Cards)</h4><ul style="margin:6px 0; padding-left:18px;">
+        <li>Click a card in your hand to inspect it.</li>
+        <li>If you can afford it and want to play it, click PLAY CARD.</li>
+        <li>Characters enter the battlefield under your control.</li>
+        <li>Techniques resolve right away (some require you to choose a glowing target).</li>
+      </ul><p>When you're done playing cards, click End Main / Combat.</p>
+      <h4>3. Combat Phase</h4><p><b>Declaring Attackers</b><br/>
+        Click the Characters you want to attack with (they will glow/highlight).<br/>
+        Click Confirm Attackers when you're happy with your selection.<br/>
+        Or click Skip Combat if you don't want to attack.</p>
+        <p><b>Blocking</b> (when the opponent attacks you)<br/>
+        The AI will attack with some of its Characters.<br/>
+        Click your Characters to assign them as blockers.<br/>
+        One blocker can only block one attacker (unless a card says otherwise).</p>
+        <p><b>Damage</b><br/>
+        Unblocked attackers deal their Power as damage to the opponent's Life.<br/>
+        Blocked attackers and blockers deal damage to each other (Power vs Toughness).<br/>
+        If a Character's Toughness drops to 0 or below, it is destroyed.</p>
+      <h4>4. End Turn</h4><p>After combat (or if you skipped it), your turn ends and the AI takes its turn.</p>
+      <h3>⚠️ Important Rules</h3><ul style="margin:6px 0; padding-left:18px;">
+        <li><b>Summoning Sickness:</b> Most Characters cannot attack the turn they enter the battlefield (unless they have Haste).</li>
+        <li><b>Targeting:</b> When a card needs a target, valid options will glow gold. Just tap/click the one you want.</li>
+        <li>You can play as many cards as you can afford during your Main Phase.</li>
+        <li>Characters that attack become "tapped" and usually can't block until your next turn.</li>
+      </ul>
+      <h3>💠 Nen Types & Rarity</h3><p>Every card has a Nen type (Enhancement, Transmutation, Emission, Conjuration, Manipulation, Specialization) and a rarity (Common → Legendary). Higher rarity cards are stronger but cost more Aura.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0;">
         <span class="nen-badge nen-enhancement">Enhancement</span>
         <span class="nen-badge nen-transmutation">Transmutation</span>
@@ -489,7 +518,6 @@
         <span class="nen-badge nen-manipulation">Manipulation</span>
         <span class="nen-badge nen-specialization">Specialization</span>
       </div>
-      <h3>⭐ Rarity</h3><p>Cards come in Common, Uncommon, Rare, Epic, and Legendary. Higher rarity cards are stronger, but they cost more Aura to play.</p>
     </div>
   </div>
 
